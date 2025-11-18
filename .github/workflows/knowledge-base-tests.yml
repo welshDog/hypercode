@@ -50,7 +50,7 @@ jobs:
           python tests/benchmark_knowledge_base.py --size 100 --runs 1 --output benchmark_${{ matrix.python-version }}.md
 
       - name: 📤 Upload coverage to Codecov
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v5
         with:
           file: ./coverage.xml
           flags: unittests
