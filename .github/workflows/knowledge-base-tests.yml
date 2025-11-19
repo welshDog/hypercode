@@ -58,7 +58,7 @@ jobs:
           fail_ci_if_error: false
 
       - name: 📤 Upload benchmark results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v5
         with:
           name: benchmark-results-python-${{ matrix.python-version }}
           path: |
@@ -166,7 +166,7 @@ jobs:
           python tests/benchmark_knowledge_base.py --sizes 100 500 1000 --output performance_report.md
 
       - name: 📤 Upload performance report
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v5
         with:
           name: performance-report
           path: |
@@ -223,7 +223,7 @@ jobs:
           bandit -r src/ || true
 
       - name: 📤 Upload security scan results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v5
         with:
           name: security-scan
           path: bandit-report.json
@@ -290,7 +290,7 @@ jobs:
           echo "All jobs completed!" >> summary.md
 
       - name: 📤 Upload summary
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v5
         with:
           name: test-summary
           path: summary.md
