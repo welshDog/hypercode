@@ -1,0 +1,4 @@
+[MASTER]
+load-plugins=pylint_django
+ignore=.venv
+disable=missing-docstring, too-few-public-methods
