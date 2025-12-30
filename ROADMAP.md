@@ -33,24 +33,14 @@
 **Milestones:**
 - [ ] Define ANTLR grammar (`.g4`)
 - [ ] Generate lexer + parser
-- [ ] Build AST data structures (Python)
-- [ ] Write snapshot tests
-- [ ] Support minimal quantum subset (init, hadamard, cnot, measure, return)
-
-**Example Test:**
-```python
-def test_bell_pair_parsing():
-    code = """@quantum_function: bell_pair () -> Bits
-      @circuit: c
-        @hadamard: q[0]
-    """
-    ast = parse(code)
-    assert ast.functions[0].name == "bell_pair"
-```
+- [x] Build AST data structures (Python)
+- [x] Write snapshot tests
+- [x] Support minimal quantum subset (init, hadamard, cnot, measure, return)
+- **Note:** A functional hand-written parser and lexer are implemented in `hypercode/parser/parser.py`. The formal ANTLR grammar needs to be synced with this implementation.
 
 **Timeline:** 2-3 weeks  
-**Owner:** [TBD]  
-**Status:** 🟡 Not started
+**Owner:** Lyndz  
+**Status:** 🟢 In Progress
 
 ---
 
@@ -59,15 +49,16 @@ def test_bell_pair_parsing():
 **Goal:** AST → HyperCode Intermediate Representation (SSA form)
 
 **Milestones:**
-- [ ] Implement IR data structures (Python)
-- [ ] Build AST → IR visitor/converter
+- [x] Implement IR data structures (Python, for quantum)
+- [x] Build AST → IR visitor/converter (for quantum)
 - [ ] Add type checking pass
 - [ ] Add scope analysis pass
 - [ ] Unit tests (AST sample → IR sample)
+- **Note:** Quantum IR lowering exists in `hypercode/ir/lower_quantum.py`.
 
 **Timeline:** 2-3 weeks  
-**Owner:** [TBD]  
-**Status:** 🟡 Not started
+**Owner:** Lyndz 
+**Status:** 🟢 In Progress
 
 ---
 
@@ -76,21 +67,15 @@ def test_bell_pair_parsing():
 **Goal:** IR → Qiskit Python code (executable)
 
 **Milestones:**
-- [ ] Implement IR → Qiskit code generator
-- [ ] Support basic gates (Hadamard, CNOT, Measure)
-- [ ] Integration tests (run on Qiskit Aer simulator)
+- [x] Implement IR → Qiskit code generator
+- [x] Support basic gates (Hadamard, CNOT, Measure)
+- [x] Integration tests (run on Qiskit Aer simulator)
 - [ ] Optional: Run on IBM quantum hardware (with API key)
-
-**Example:**
-```bash
-$ hypercode run examples/bell_pair.hc --backend qiskit
-Running on Qiskit simulator...
-Results: {'00': 512, '11': 488}  (approx 50/50)
-```
+- **Note:** A functional Qiskit backend is implemented in `hypercode/backends/qiskit_backend.py`.
 
 **Timeline:** 2-3 weeks  
-**Owner:** [TBD]  
-**Status:** 🟡 Not started
+**Owner:** Lyndz 
+**Status:** 🟢 In Progress
 
 ---
 
@@ -99,19 +84,16 @@ Results: {'00': 512, '11': 488}  (approx 50/50)
 **Goal:** User-facing command-line interface
 
 **Commands:**
-```bash
-hypercode parse examples/bell_pair.hc         # Show AST (JSON)
-hypercode ir examples/bell_pair.hc            # Show IR (textual)
-hypercode run examples/bell_pair.hc           # Execute (default: qiskit)
-hypercode run examples/bell_pair.hc --backend classical
-hypercode run examples/bell_pair.hc --backend molecular
-hypercode --version
-hypercode --help
-```
+- [x] `hypercode parse`
+- [x] `hypercode qir`
+- [x] `hypercode run`
+- [x] `hypercode --version`
+- [x] `hypercode --help`
+- **Note:** The core CLI is functional in `hypercode/cli.py`.
 
-**Timeline:** 1 week (after backend integration)  
-**Owner:** [TBD]  
-**Status:** 🟡 Not started
+**Timeline:** 1 week  
+**Owner:** Lyndz  
+**Status:** 🟢 In Progress
 
 ---
 
@@ -125,7 +107,8 @@ hypercode --help
 - D3.js (data visualization)
 - Python FastAPI (backend, optional)
 
-**Features:**
+**Milestones:**
+- [x] Foundational project homepage created.
 - [ ] Node palette (15+ nodes)
 - [ ] Drag-drop canvas
 - [ ] Parameter editing (sliders, dropdowns)
@@ -136,7 +119,7 @@ hypercode --help
 
 **Timeline:** 3-4 weeks  
 **Owner:** [TBD] (web dev)  
-**Status:** 🟡 Not started
+**Status:** 🟢 In Progress
 
 ---
 
@@ -196,15 +179,6 @@ hypercode --help
 - [ ] Execution error messages
 - [ ] Helpful suggestions
 
-**Example:**
-```
-Error at line 5, col 10:
-  @hadamard: qubits["string"]  # Wrong: expecting Int
-                     ^^^^^^^^^
-  Type mismatch: QuantumRegister expects Int index, got String
-  Did you mean: qubits[0] ?
-```
-
 **Timeline:** 1-2 weeks  
 **Status:** 🟡 Not started
 
@@ -213,16 +187,17 @@ Error at line 5, col 10:
 ### 3.3: Testing Framework
 
 **Milestones:**
-- [ ] Unit tests (parser, IR, backends)
-- [ ] Integration tests (end-to-end programs)
+- [x] Unit tests (parser, IR, backends)
+- [x] Integration tests (end-to-end programs)
 - [ ] Performance tests
 - [ ] Quantum accuracy tests (statistical validation)
 - [ ] Accessibility tests (with neurodivergent users)
+- **Note:** `pytest` framework is in place with initial tests for core functionality.
 
 **Coverage Goal:** >80%
 
 **Timeline:** 2-3 weeks  
-**Status:** 🟡 Not started
+**Status:** 🟢 In Progress
 
 ---
 
@@ -230,13 +205,13 @@ Error at line 5, col 10:
 
 **Milestones:**
 - [ ] User guide (how to write HyperCode)
-- [ ] API documentation
+- [x] API documentation (initial version for `execute` API)
 - [ ] Tutorials (step-by-step)
 - [ ] Video walkthroughs
 - [ ] Community wiki
 
 **Timeline:** 2-3 weeks  
-**Status:** 🟡 Not started
+**Status:** 🟢 In Progress
 
 ---
 
@@ -248,11 +223,11 @@ Error at line 5, col 10:
 - [ ] Public GitHub release
 - [ ] PyPI package (`pip install hypercode`)
 - [ ] Docker image
-- [ ] CI/CD pipeline (GitHub Actions)
-- [ ] License finalization (Apache 2.0 or MIT)
+- [x] CI/CD pipeline (GitHub Actions)
+- [x] License finalization (CC-BY 4.0)
 
 **Timeline:** 1 week  
-**Status:** 🟡 Not started
+**Status:** 🟢 In Progress
 
 ---
 
@@ -263,11 +238,12 @@ Error at line 5, col 10:
 - [ ] Build code generation evaluation suite
 - [ ] LSP (Language Server Protocol) support
 - [ ] IDE extensions (VS Code, Vim, Emacs)
+- **Note:** A programmatic API (`hypercode.execute()`) has been created, which is a key enabler for LLM integration and evaluation.
 
 **Goal:** LLM accuracy >80% on simple programs
 
 **Timeline:** 2-3 weeks  
-**Status:** 🟡 Not started
+**Status:** 🟢 In Progress
 
 ---
 
@@ -321,14 +297,14 @@ Error at line 5, col 10:
 
 | Phase | Duration | Status | Owner |
 |-------|----------|--------|-------|
-| **Phase 1** | Dec 2024 - Dec 2025 | ✅ DONE | Lyndz |
-| **Phase 2.1** | Jan 2025 | 🟡 Ready | [Recruit] |
-| **Phase 2.2** | Feb 2025 | 🟡 Ready | [Recruit] |
-| **Phase 2.3** | Feb-Mar 2025 | 🟡 Ready | [Recruit] |
-| **Phase 2.4** | Feb 2025 | 🟡 Ready | [Recruit] |
-| **Phase 2.5** | Mar-Apr 2025 | 🟡 Ready | [Recruit] |
-| **Phase 3** | Apr-Jun 2025 | 🟡 Planned | [Recruit] |
-| **Phase 4** | Jun-Dec 2025 | 🟡 Planned | Community |
+| **Phase 1** | Dec 2024 | ✅ DONE | Lyndz |
+| **Phase 2.1** | Jan 2025 | 🟢 In Progress | Lyndz |
+| **Phase 2.2** | Feb 2025 | 🟢 In Progress | Lyndz |
+| **Phase 2.3** | Feb-Mar 2025 | 🟢 In Progress | Lyndz |
+| **Phase 2.4** | Feb 2025 | 🟢 In Progress | Lyndz |
+| **Phase 2.5** | Mar-Apr 2025 | 🟢 In Progress | Lyndz |
+| **Phase 3** | Apr-Jun 2025 | 🟢 In Progress | [Recruit] |
+| **Phase 4** | Jun-Dec 2025 | 🟢 In Progress | Community |
 
 ---
 
