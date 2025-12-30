@@ -1,0 +1,59 @@
+"""
+This module provides the primary programmatic API for executing HyperCode.
+"""
+
+from typing import Optional
+
+from hypercode.parser.parser import parse
+from hypercode.interpreter.evaluator import Evaluator
+from hypercode.results import ExecutionResult
+
+
+def execute(
+    code_string: str,
+    use_quantum_sim: bool = True,
+    shots: int = 1024,
+    seed: Optional[int] = None,
+) -> ExecutionResult:
+    """
+    Parses, evaluates, and executes a string of HyperCode.
+
+    This is the primary entry point for using HyperCode as a library.
+
+    Args:
+        code_string: A string containing the HyperCode program.
+        use_quantum_sim: Whether to execute quantum circuits using the Qiskit simulator.
+        shots: The number of shots to use in the quantum simulation.
+        seed: The random seed for the quantum simulator.
+
+    Returns:
+        An ExecutionResult object containing the results, AST, QIR, and any errors.
+    """
+    try:
+        # 1. Parse the source code into an AST
+        program_ast = parse(code_string)
+
+        # 2. Set up and run the evaluator
+        evaluator = Evaluator(
+            use_quantum_sim=use_quantum_sim,
+            shots=shots,
+            seed=seed,
+        )
+        evaluator.evaluate(program_ast)
+
+        # 3. Package the results
+        # The 'result' is the final state of the interpreter's variables.
+        return ExecutionResult(
+            result=evaluator.variables,
+            ast=program_ast,
+            qir=evaluator.qir,
+        )
+
+    except Exception as e:
+        # If any step fails, return an ExecutionResult with the error
+        return ExecutionResult(
+            result=None,
+            ast=None,
+            qir=None,
+            error=str(e),
+        )

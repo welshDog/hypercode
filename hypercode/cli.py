@@ -5,6 +5,11 @@ import sys
 from pathlib import Path
 from typing import Optional
 
+from hypercode.parser.parser import parse
+from hypercode.ast.nodes import QuantumCircuitDecl, DataDecl, Statement
+from hypercode.ir.lower_quantum import lower_circuit
+from hypercode.interpreter.evaluator import Evaluator
+
 # ANSI color codes for better output
 class Colors:
     HEADER = '\033[95m'
@@ -37,6 +42,9 @@ def run_command(args):
     """Handle the run command."""
     file_path = args.file
     backend = args.backend
+    shots = getattr(args, 'shots', 1024)
+    seed = getattr(args, 'seed', None)
+    
     print_header(f"RUNNING HYPERCODE PROGRAM: {file_path}")
     
     try:
@@ -44,32 +52,28 @@ def run_command(args):
             source = f.read()
             
             print_info(f"Backend: {backend}")
-            print_info("Source code preview:")
-            print("-" * 60)
+            if backend == "qiskit":
+                print_info(f"Shots: {shots}, Seed: {seed}")
             
-            # Show first 10 lines of source with line numbers
-            lines = source.split('\n')
-            for i, line in enumerate(lines[:10], 1):
-                print(f"{i:3d} | {line}")
-                
-            if len(lines) > 10:
-                print(f"... and {len(lines) - 10} more lines")
-                
-            print("-" * 60)
+            # Parse
+            try:
+                program = parse(source)
+            except Exception as e:
+                print_error(f"Parse Error: {e}")
+                return
+
+            # Evaluate (Classical + Quantum Stub)
+            print_info("Executing...")
             
-            # Simulate execution
-            print("\n" + "=" * 60)
-            print("EXECUTION SIMULATION")
-            print("=" * 60)
-            print("\nThis is a preview of what execution would look like.")
-            print("The actual HyperCode runtime is under development.\n")
+            # Pass options to Evaluator
+            evaluator = Evaluator(
+                use_quantum_sim=(backend == "qiskit"),
+                shots=shots,
+                seed=seed
+            )
+            evaluator.evaluate(program)
             
-            # Simple simulation of fizzbuzz output
-            if 'fizzbuzz' in file_path.lower():
-                print("Sample output (simulated):")
-                print("1\n2\nFizz\n4\nBuzz\nFizz\n...")
-            
-            print_success("Execution completed successfully (simulated)")
+            print_success("Execution completed successfully")
             
     except FileNotFoundError:
         print_error(f"File not found: {file_path}")
@@ -81,62 +85,21 @@ def run_command(args):
 def parse_command(args):
     """Handle the parse command."""
     file_path = args.file
-    verbose = getattr(args, 'verbose', False)
     print_header(f"PARSING HYPERCODE FILE: {file_path}")
     
     try:
         with open(file_path, 'r', encoding='utf-8') as f:
             source = f.read()
             
-            print_info("Abstract Syntax Tree (AST) Preview:")
+            print_info("Abstract Syntax Tree (AST):")
             print("-" * 60)
             
-            # Simple AST representation
-            print("Module(")
-            print("  body=[")
+            program = parse(source)
+            for stmt in program.statements:
+                print(stmt)
             
-            lines = source.split('\n')
-            for i, line in enumerate(lines, 1):
-                line = line.strip()
-                if line and not line.startswith('#'):
-                    indent = "    "
-                    if 'function' in line:
-                        func_name = line.split('(')[0].replace('function', '').strip()
-                        print(f"{indent}FunctionDef(")
-                        print(f"{indent}  name='{func_name}',")
-                        print(f"{indent}  args=Arguments(...),")
-                        print(f"{indent}  body=[...]")
-                        print(f"{indent}),")
-                    elif 'if ' in line:
-                        condition = line.split('if ')[1].split(':')[0].strip()
-                        print(f"{indent}If(")
-                        print(f"{indent}  test={condition},")
-                        print(f"{indent}  body=[...],")
-                        print(f"{indent}  orelse=[]")
-                        print(f"{indent}),")
-                    elif 'for ' in line:
-                        print(f"{indent}For(")
-                        print(f"{indent}  target=Name(id='i', ctx=Store()),")
-                        print(f"{indent}  iter=Call(func=Name(id='range', ctx=Load()), args=[...]),")
-                        print(f"{indent}  body=[...],")
-                        print(f"{indent}  orelse=[]")
-                        print(f"{indent}),")
-                    else:
-                        print(f"{indent}# Line {i}: {line}")
-            
-            print("  ]")
-            print(")")
             print("-" * 60)
-            
-            if verbose:
-                print("\nDetailed parse information:")
-                print(f"- Total lines: {len(lines)}")
-                code_lines = [l for l in lines if l.strip() and not l.strip().startswith('#')]
-                print(f"- Code lines: {len(code_lines)}")
-                print(f"- Functions: {len([l for l in lines if 'function' in l])}")
-                print(f"- Imports: {len([l for l in lines if l.strip().startswith('import ')])}")
-            
-            print_success("Parsing completed successfully (simulated)")
+            print_success("Parsing completed successfully")
             
     except FileNotFoundError:
         print_error(f"File not found: {file_path}")
@@ -145,13 +108,49 @@ def parse_command(args):
         print_error(f"Error parsing {file_path}: {str(e)}")
         sys.exit(1)
 
-def ir_command(args):
-    """Handle the IR generation command."""
+def qir_command(args):
+    """Handle the qir command."""
     file_path = args.file
-    print_header(f"GENERATING IR FOR: {file_path}")
-    print_info("This feature is not yet implemented.")
-    print_info("Coming soon: Generate intermediate representation for HyperCode programs.")
-    print_success("IR generation completed (simulated)")
+    print_header(f"GENERATING QUANTUM IR FOR: {file_path}")
+    
+    try:
+        with open(file_path, 'r', encoding='utf-8') as f:
+            source = f.read()
+            
+            # Parse
+            program = parse(source)
+            
+            # Extract constants (rudimentary)
+            constants = {}
+            for stmt in program.statements:
+                if isinstance(stmt, DataDecl):
+                    if hasattr(stmt.value, 'value'):
+                        constants[stmt.name] = stmt.value.value
+            
+            # Find and Lower Quantum Circuits
+            found_quantum = False
+            for stmt in program.statements:
+                if isinstance(stmt, QuantumCircuitDecl):
+                    found_quantum = True
+                    print_info(f"Lowering Circuit: {stmt.name}")
+                    try:
+                        ir_module = lower_circuit(stmt, constants)
+                        print(str(ir_module))
+                        print("-" * 40)
+                    except Exception as e:
+                        print_error(f"Failed to lower circuit {stmt.name}: {e}")
+            
+            if not found_quantum:
+                print_info("No quantum circuits found in file.")
+            else:
+                print_success("QIR generation completed")
+
+    except FileNotFoundError:
+        print_error(f"File not found: {file_path}")
+        sys.exit(1)
+    except Exception as e:
+        print_error(f"Error: {str(e)}")
+        sys.exit(1)
 
 def version_command(args):
     """Handle the version command."""
@@ -176,54 +175,34 @@ def main():
     subparsers = parser.add_subparsers(dest="command", help="Command to run")
     
     # parse command
-    parse_parser = subparsers.add_parser(
-        "parse", 
-        help="Parse HyperCode file and show AST"
-    )
-    parse_parser.add_argument(
-        "file", 
-        help="Input .hc file"
-    )
-    parse_parser.add_argument(
-        '--verbose', '-v', 
-        action='store_true',
-        help='Show detailed parse information'
-    )
+    parse_parser = subparsers.add_parser("parse", help="Parse HyperCode file and show AST")
+    parse_parser.add_argument("file", help="Input .hc file")
     parse_parser.set_defaults(func=parse_command)
     
-    # ir command
-    ir_parser = subparsers.add_parser(
-        "ir", 
-        help="Generate IR from HyperCode file"
-    )
-    ir_parser.add_argument(
-        "file", 
-        help="Input .hc file"
-    )
-    ir_parser.set_defaults(func=ir_command)
+    # qir command
+    qir_parser = subparsers.add_parser("qir", help="Generate Quantum IR from HyperCode file")
+    qir_parser.add_argument("file", help="Input .hc file")
+    qir_parser.set_defaults(func=qir_command)
     
     # run command
-    run_parser = subparsers.add_parser(
-        "run", 
-        help="Run HyperCode program"
-    )
-    run_parser.add_argument(
-        "file", 
-        help="Input .hc file"
-    )
-    run_parser.add_argument(
-        "--backend",
-        choices=["qiskit", "classical", "molecular"],
-        default="qiskit",
-        help="Backend to use for execution"
-    )
+    run_parser = subparsers.add_parser("run", help="Run HyperCode program")
+    run_parser.add_argument("file", help="Input .hc file")
+    run_parser.add_argument("--backend", choices=["qiskit", "classical", "molecular"], default="qiskit", help="Backend to use for execution")
     run_parser.set_defaults(func=run_command)
     
+    # quantum subcommand
+    quantum_parser = subparsers.add_parser("quantum", help="Quantum specific operations")
+    quantum_subparsers = quantum_parser.add_subparsers(dest="quantum_command", help="Quantum commands")
+    
+    # quantum run command
+    q_run_parser = quantum_subparsers.add_parser("run", help="Run a quantum program with specific options")
+    q_run_parser.add_argument("file", help="Input .hc file")
+    q_run_parser.add_argument("--shots", type=int, default=1024, help="Number of shots (default: 1024)")
+    q_run_parser.add_argument("--seed", type=int, default=None, help="Simulator seed")
+    q_run_parser.set_defaults(func=run_command, backend="qiskit")
+
     # version command
-    version_parser = subparsers.add_parser(
-        "version",
-        help="Show version information"
-    )
+    version_parser = subparsers.add_parser("version", help="Show version information")
     version_parser.set_defaults(func=version_command)
     
     # If no arguments provided, show help

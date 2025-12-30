@@ -50,39 +50,37 @@ For neurodivergent coders, typical languages often don't fit brain patterns. Hyp
 
 ## 🚀 Quick Start
 
-### Installation (Coming Soon)
+### Installation
 
 ```bash
-git clone https://github.com/welshDog/hypercode
-cd hypercode
-poetry install  # or pip install -r requirements.txt
+git clone https://github.com/welshDog/THE-HYPERCODE
+cd THE-HYPERCODE
+pip install -e ".[qiskit]"
 ```
 
-### First Program (Quantum Example)
+### First Program (Quantum Bell Pair)
+
+Create a file named `bell_pair.hc`:
 
 ```hypercode
-#:domain quantum
-#:backend qiskit
-
-@quantum_function: bell_pair () -> Bits
-  @doc: "Create a Bell pair (maximally entangled state)"
-  
-  @circuit: c
-    @init: qubits = QuantumRegister(2)
-    @hadamard: qubits[0]
-    @cnot: control=qubits[0], target=qubits[1]
-    @measure: qubits -> result
-  
-  @return: result
-
-@function: main ()
-  @let: result = bell_pair()
-  @print: result
+@quantum BellState qubits 2
+    H q0
+    CX q0 q1
+    MEASURE q0 -> c0
+    MEASURE q1 -> c1
+@end
 ```
 
 Run it:
+
 ```bash
-hypercode run examples/bell_pair.hc --backend qiskit
+hypercode quantum run bell_pair.hc --shots 1000
+```
+
+Output:
+```
+QuantumCircuit BellState: 2 qubits, 4 ops
+Results (BellState): {'00': 502, '11': 498}
 ```
 
 ---
@@ -91,11 +89,11 @@ hypercode run examples/bell_pair.hc --backend qiskit
 
 ### Phase 1: Complete Design Specification
 
-- **[HyperCode Research Report 2025](./docs/HyperCode_Research_Report_2025.md)** — Landscape analysis, trends, vision (521 lines)
-- **[Design Sprint 1: Textual Syntax](./docs/Phase1_Design_Sprint_1_Textual_Syntax.md)** — Grammar, type system, examples (435 lines)
-- **[Design Sprint 2: Visual Syntax](./docs/Phase1_Design_Sprint_2_Visual_Syntax.md)** — Node library, interactions, patterns (616 lines)
-- **[Design Sprint 3: Intermediate Representation](./docs/Phase1_Design_Sprint_3_Intermediate_Representation.md)** — MLIR-style IR, optimization, code gen (769 lines)
-- **[Phase 1 Summary](./docs/Phase1_Complete_Summary.md)** — Overview, decisions, next steps (433 lines)
+- **[HyperCode Research Report 2025](./docs/HyperCode_Research_Report_2025.md)** — Landscape analysis, trends, vision
+- **[Design Sprint 1: Textual Syntax](./docs/Phase1_Design_Sprint_1_Textual_Syntax.md)** — Grammar, type system, examples
+- **[Design Sprint 2: Visual Syntax](./docs/Phase1_Design_Sprint_2_Visual_Syntax.md)** — Node library, interactions, patterns
+- **[Design Sprint 3: Intermediate Representation](./docs/Phase1_Design_Sprint_3_Intermediate_Representation.md)** — MLIR-style IR, optimization, code gen
+- **[Phase 1 Summary](./docs/Phase1_Complete_Summary.md)** — Overview, decisions, next steps
 
 ### Phase 2: Implementation (In Progress)
 
@@ -131,46 +129,20 @@ hypercode run examples/bell_pair.hc --backend qiskit
 
 ---
 
-## 📊 Current Status
-
-| Phase | Status | Timeline |
-|-------|--------|----------|
-| **Phase 1:** Design Specification | ✅ **COMPLETE** | Done (Dec 2025) |
-| **Phase 2:** Implementation | 🟡 **STARTING** | Jan-May 2025 |
-## Current Status (Dec 30, 2025) ✅
+## 📊 Current Status (v0.1.0) ✅
 
 | Phase | Status | What's Real |
 |-------|--------|-------------|
 | Phase 1 — Design Spec | ✅ Complete | Vision docs + architecture diagram |
-| Phase 2 — Implementation | 🟡 Started | `setup.py` + core structure |
-| Phase 3 — Parser/AST | ⏳ Next | Tree-sitter or Lark parser |
-
-## Quick Start (Dev Preview) 🧪
-
-```bash
-git clone https://github.com/welshDog/THE-HYPERCODE
-cd THE-HYPERCODE
-pip install -e .
-hypercode --help  # CLI stub ready
-```
+| Phase 2 — Implementation | 🟡 In Progress | v0.1.0 Released (Parser + Quantum Backend) |
+| Phase 3 — Optimization | ⏳ Planned | Optimization passes |
 
 ## What Works Today ✅
 
-- **Core vision + spec docs** — neurodivergent-first multi-paradigm language
-- **Python packaging** — `pip install -e .` + CLI entrypoint ready
-- **Repo structure** — `hypercode/`, `examples/`, `tests/` folders scaffolded
-- **Architecture diagram** — MLIR → LLVM/Qiskit/DSD pipeline visualized
-
-**Next Milestone (Jan 2026)**
-- Tree-sitter parser for `.hcode` files
-- First classical example compiling to Python
-
-## Good First Issues
-
-1. **`good first issue` Add Tree-sitter grammar** — parse visual/textual HyperCode syntax [help wanted]
-2. **`help wanted` First `.hcode` example** — classical fizzbuzz that runs [good first issue]
-3. **`good first issue` Discord bot integration** — AI code review bot for community [help wanted]
-| **Phase 3:** Optimization & Reliability | 🟡 **Planned** | Apr-Jun 2025 |
+- **Parser** — Custom recursive descent parser for HyperCode syntax.
+- **Quantum Backend** — Execution via Qiskit (Aer Simulator priority).
+- **CLI** — `hypercode` command line interface for running and debugging.
+- **Repo structure** — `hypercode/`, `examples/`, `tests/` folders scaffolded.
 
 ---
 
@@ -221,116 +193,31 @@ We're **recruiting neurodivergent co-designers and developers**.
 
 ## 📖 Examples
 
-### Classical (Imperative)
+See the `examples/` directory for more.
 
+### Quantum Bell Pair
 ```hypercode
-@function: filter_positive (data: List<Int>) -> List<Int>
-  @let: result = []
-  @for: x in data
-    @when: x > 0
-      @push: result, x
-  @return: result
-
-@function: main ()
-  @let: input = [1, -2, 3, -4, 5]
-  @let: output = filter_positive(input)
-  @print: output  # → [1, 3, 5]
+@quantum BellState qubits 2
+    H q0
+    CX q0 q1
+    MEASURE q0 -> c0
+    MEASURE q1 -> c1
+@end
 ```
 
-### Quantum (Circuit-Based)
-
+### Classical Logic
 ```hypercode
-#:domain quantum
-
-@quantum_function: grover_search (n: Int, marked: Int) -> Int
-  @doc: "Quantum search: find marked element in n items"
-  
-  @circuit: c
-    @init: qubits = QuantumRegister(n)
-    
-    @for: i in range(n)
-      @hadamard: qubits[i]
-    
-    @let: iterations = int(sqrt(n))
-    @for: _ in range(iterations)
-      @apply: oracle(qubits, marked)
-      @apply: diffusion(qubits)
-    
-    @measure: qubits -> result
-  
-  @return: result
+@data x: 10
+@check (x > 5) -> {
+    @print(x)
+}
 ```
-
-### Molecular (Reaction-Based)
-
-```hypercode
-#:domain molecular
-
-@molecular_circuit: gene_detector (sample: DNASolution) -> Float
-  @stages
-    @stage: "binding"
-      @reaction: probe + target -> complex
-      @time: 5 minutes
-    
-    @stage: "amplification"
-      @cascade: signal_amplification
-        @trigger: complex
-        @output: fluorescence
-    
-    @measure: output
-  
-  @return: fluorescence_intensity
-```
-
----
-
-## 🎯 Roadmap (2025)
-
-### Q1 2025: Parser & First Backend
-- ✅ Textual syntax parser (ANTLR or langcc)
-- ✅ AST builder
-- ✅ Basic IR infrastructure
-- ✅ Quantum backend (→ Qiskit)
-- ✅ CLI tool (`hypercode run`)
-
-### Q2 2025: Multi-Backend
-- Classical backend (→ LLVM)
-- Molecular backend (→ DSD)
-- Visual editor (React + node library)
-- Language Server Protocol (LSP) support
-
-### Q3 2025: Optimization & AI
-- Optimization passes (constant folding, gate fusion, etc.)
-- LLM integration (Claude/GPT fine-tuned for HyperCode)
-- Resource estimation
-- Hardware deployment guides
-
-### Q4 2025: Community & Hardening
-- Open-source community building
-- Industry partnerships (IBM, Google, Microsoft)
-- Educational materials
-- Production-ready reliability
-
----
-
-## 📞 Get Involved
-
-- **GitHub Issues:** [Report bugs, suggest features](https://github.com/welshDog/hypercode/issues)
-- **Discussions:** [Chat about design, ask questions](https://github.com/welshDog/hypercode/discussions)
-- **Twitter:** [@HyperCodeLang](https://twitter.com) (coming soon)
-- **Discord:** [Community server](https://discord.gg) (coming soon)
 
 ---
 
 ## 📜 License
 
-HyperCode is open-source and distributed under the **CC-BY 4.0 License** (documentation) + **[TBD: Choose Compiler License]** (implementation).
-
-This means:
-✅ Use it freely (personal, research, commercial)  
-✅ Modify it (fork, adapt, extend)  
-✅ Share it (redistribute with attribution)  
-✅ Attribution required (mention HyperCode)
+HyperCode is open-source and distributed under the **CC-BY 4.0 License**.
 
 ---
 
@@ -362,4 +249,4 @@ HyperCode synthesizes insights from:
 
 **Made with ♾️ by [Lyndz Williams](https://github.com/welshDog) and the HyperCode community.**
 
-**Last Updated:** December 28, 2025
+**Last Updated:** December 30, 2025

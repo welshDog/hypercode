@@ -5,8 +5,11 @@ setup(
     version="0.1.0",
     packages=find_packages(),
     install_requires=[
-        'antlr4-python3-runtime>=4.13.1',
+        # Core requirements
     ],
+    extras_require={
+        'qiskit': ['qiskit>=1.0.0', 'qiskit-aer>=0.13.0'],
+    },
     python_requires='>=3.8',
     entry_points={
         'console_scripts': [
