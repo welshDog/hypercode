@@ -1,9 +1,9 @@
-"""HyperCode CLI (command-line interface)."""
+"""HyperCode command-line interface entry point."""
 
-import argparse
-import sys
-from pathlib import Path
-from typing import Optional
+from hypercode.cli import main
+
+if __name__ == "__main__":
+    main()
 
 # ANSI color codes for better output
 class Colors:
@@ -33,10 +33,68 @@ def print_info(text: str) -> None:
     """Print an informational message."""
     print(f"{Colors.CYAN}ℹ {text}{Colors.ENDC}")
 
-def run_command(args):
-    """Handle the run command."""
-    file_path = args.file
-    backend = args.backend
+def main() -> None:
+    """Entry point for the HyperCode CLI."""
+    parser = argparse.ArgumentParser(
+        description=f"{Colors.BLUE}{Colors.BOLD}HyperCode: A neurodivergent-first programming language{Colors.ENDC}",
+        usage="""hypercode <command> [<args>]
+
+Available commands:
+  run       Run a HyperCode program
+  parse     Parse a HyperCode file and show the AST
+  help      Show this help message
+  version   Show version information
+""",
+        formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    
+    parser.add_argument(
+        'command',
+        help='Subcommand to run',
+        choices=['run', 'parse', 'help', 'version'],
+        nargs='?'
+    )
+    
+    # If no arguments provided, show help
+    if len(sys.argv) == 1:
+        parser.print_help()
+        sys.exit(0)
+        
+    args = parser.parse_args(sys.argv[1:2])
+    
+    if args.command == 'run':
+        run_parser = argparse.ArgumentParser(description='Run a HyperCode program')
+        run_parser.add_argument('file', help='Path to the .hc file to run')
+        run_parser.add_argument('--backend', '-b', 
+                             choices=['qiskit', 'simulator', 'hardware'],
+                             default='qiskit',
+                             help='Backend to use for execution')
+        run_args = run_parser.parse_args(sys.argv[2:])
+        run_file(run_args.file, run_args.backend)
+        
+    elif args.command == 'parse':
+        parse_parser = argparse.ArgumentParser(description='Parse a HyperCode file')
+        parse_parser.add_argument('file', help='Path to the .hc file to parse')
+        parse_parser.add_argument('--verbose', '-v', 
+                                action='store_true',
+                                help='Show detailed parse information')
+        parse_args = parse_parser.parse_args(sys.argv[2:])
+        parse_file(parse_args.file, parse_args.verbose)
+        
+    elif args.command == 'version' or (len(sys.argv) > 1 and sys.argv[1] in ['-v', '--version']):
+        print("HyperCode v0.1.0 (development)")
+        print("A neurodivergent-first programming language")
+        print("https://github.com/welshDog/THE-HYPERCODE")
+        
+    elif args.command == 'help' or (len(sys.argv) > 1 and sys.argv[1] in ['-h', '--help']):
+        parser.print_help()
+    else:
+        print_error(f"Unknown command: {args.command}")
+        parser.print_help()
+        sys.exit(1)
+
+def run_file(file_path: str, backend: str = 'qiskit') -> None:
+    """Run a HyperCode program from a file."""
     print_header(f"RUNNING HYPERCODE PROGRAM: {file_path}")
     
     try:
@@ -59,7 +117,7 @@ def run_command(args):
             
             # Simulate execution
             print("\n" + "=" * 60)
-            print("EXECUTION SIMULATION")
+            print("EXECUTION SIMULATION (STUB IMPLEMENTATION)")
             print("=" * 60)
             print("\nThis is a preview of what execution would look like.")
             print("The actual HyperCode runtime is under development.\n")
@@ -78,10 +136,8 @@ def run_command(args):
         print_error(f"Error running {file_path}: {str(e)}")
         sys.exit(1)
 
-def parse_command(args):
-    """Handle the parse command."""
-    file_path = args.file
-    verbose = getattr(args, 'verbose', False)
+def parse_file(file_path: str, verbose: bool = False) -> None:
+    """Parse a HyperCode file and display the AST."""
     print_header(f"PARSING HYPERCODE FILE: {file_path}")
     
     try:
@@ -143,106 +199,6 @@ def parse_command(args):
         sys.exit(1)
     except Exception as e:
         print_error(f"Error parsing {file_path}: {str(e)}")
-        sys.exit(1)
-
-def ir_command(args):
-    """Handle the IR generation command."""
-    file_path = args.file
-    print_header(f"GENERATING IR FOR: {file_path}")
-    print_info("This feature is not yet implemented.")
-    print_info("Coming soon: Generate intermediate representation for HyperCode programs.")
-    print_success("IR generation completed (simulated)")
-
-def version_command(args):
-    """Handle the version command."""
-    print("HyperCode v0.1.0 (development)")
-    print("A neurodivergent-first programming language")
-    print("https://github.com/welshDog/THE-HYPERCODE")
-
-def main():
-    """Main CLI entry point."""
-    parser = argparse.ArgumentParser(
-        description=f"{Colors.BLUE}{Colors.BOLD}HyperCode: A neurodivergent-first programming language{Colors.ENDC}",
-        formatter_class=argparse.RawDescriptionHelpFormatter
-    )
-    
-    # Add --version flag
-    parser.add_argument(
-        '-v', '--version',
-        action='store_true',
-        help='Show version information and exit'
-    )
-    
-    subparsers = parser.add_subparsers(dest="command", help="Command to run")
-    
-    # parse command
-    parse_parser = subparsers.add_parser(
-        "parse", 
-        help="Parse HyperCode file and show AST"
-    )
-    parse_parser.add_argument(
-        "file", 
-        help="Input .hc file"
-    )
-    parse_parser.add_argument(
-        '--verbose', '-v', 
-        action='store_true',
-        help='Show detailed parse information'
-    )
-    parse_parser.set_defaults(func=parse_command)
-    
-    # ir command
-    ir_parser = subparsers.add_parser(
-        "ir", 
-        help="Generate IR from HyperCode file"
-    )
-    ir_parser.add_argument(
-        "file", 
-        help="Input .hc file"
-    )
-    ir_parser.set_defaults(func=ir_command)
-    
-    # run command
-    run_parser = subparsers.add_parser(
-        "run", 
-        help="Run HyperCode program"
-    )
-    run_parser.add_argument(
-        "file", 
-        help="Input .hc file"
-    )
-    run_parser.add_argument(
-        "--backend",
-        choices=["qiskit", "classical", "molecular"],
-        default="qiskit",
-        help="Backend to use for execution"
-    )
-    run_parser.set_defaults(func=run_command)
-    
-    # version command
-    version_parser = subparsers.add_parser(
-        "version",
-        help="Show version information"
-    )
-    version_parser.set_defaults(func=version_command)
-    
-    # If no arguments provided, show help
-    if len(sys.argv) == 1:
-        parser.print_help()
-        sys.exit(0)
-    
-    args = parser.parse_args()
-    
-    # Handle --version flag
-    if getattr(args, 'version', False):
-        version_command(args)
-        return
-    
-    # Execute the appropriate command
-    if hasattr(args, 'func'):
-        args.func(args)
-    else:
-        parser.print_help()
         sys.exit(1)
 
 if __name__ == "__main__":

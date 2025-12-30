@@ -137,11 +137,39 @@ hypercode run examples/bell_pair.hc --backend qiskit
 |-------|--------|----------|
 | **Phase 1:** Design Specification | ✅ **COMPLETE** | Done (Dec 2025) |
 | **Phase 2:** Implementation | 🟡 **STARTING** | Jan-May 2025 |
-| **2.1:** Parser + AST | 🟢 **Ready to start** | Jan 2025 |
-| **2.2:** IR Builder | 🟡 **Planned** | Feb 2025 |
-| **2.3:** Quantum Backend | 🟡 **Planned** | Feb-Mar 2025 |
-| **2.4:** Classical + Molecular | 🟡 **Planned** | Mar-Apr 2025 |
-| **2.5:** Visual Editor | 🟡 **Planned** | Feb-Apr 2025 |
+## Current Status (Dec 30, 2025) ✅
+
+| Phase | Status | What's Real |
+|-------|--------|-------------|
+| Phase 1 — Design Spec | ✅ Complete | Vision docs + architecture diagram |
+| Phase 2 — Implementation | 🟡 Started | `setup.py` + core structure |
+| Phase 3 — Parser/AST | ⏳ Next | Tree-sitter or Lark parser |
+
+## Quick Start (Dev Preview) 🧪
+
+```bash
+git clone https://github.com/welshDog/THE-HYPERCODE
+cd THE-HYPERCODE
+pip install -e .
+hypercode --help  # CLI stub ready
+```
+
+## What Works Today ✅
+
+- **Core vision + spec docs** — neurodivergent-first multi-paradigm language
+- **Python packaging** — `pip install -e .` + CLI entrypoint ready
+- **Repo structure** — `hypercode/`, `examples/`, `tests/` folders scaffolded
+- **Architecture diagram** — MLIR → LLVM/Qiskit/DSD pipeline visualized
+
+**Next Milestone (Jan 2026)**
+- Tree-sitter parser for `.hcode` files
+- First classical example compiling to Python
+
+## Good First Issues
+
+1. **`good first issue` Add Tree-sitter grammar** — parse visual/textual HyperCode syntax [help wanted]
+2. **`help wanted` First `.hcode` example** — classical fizzbuzz that runs [good first issue]
+3. **`good first issue` Discord bot integration** — AI code review bot for community [help wanted]
 | **Phase 3:** Optimization & Reliability | 🟡 **Planned** | Apr-Jun 2025 |
 
 ---
