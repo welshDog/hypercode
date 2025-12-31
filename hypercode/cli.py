@@ -38,7 +38,7 @@ def print_info(text: str) -> None:
     """Print an informational message."""
     print(f"{Colors.CYAN}ℹ {text}{Colors.ENDC}")
 
-def run_command(args):
+def run_command(args: argparse.Namespace) -> None:
     """Handle the run command."""
     file_path = args.file
     backend = args.backend
@@ -82,7 +82,7 @@ def run_command(args):
         print_error(f"Error running {file_path}: {str(e)}")
         sys.exit(1)
 
-def parse_command(args):
+def parse_command(args: argparse.Namespace) -> None:
     """Handle the parse command."""
     file_path = args.file
     print_header(f"PARSING HYPERCODE FILE: {file_path}")
@@ -152,7 +152,7 @@ def qir_command(args: argparse.Namespace) -> None:
         print_error(f"Error: {str(e)}")
         sys.exit(1)
 
-def version_command(args):
+def version_command(args: argparse.Namespace) -> None:
     """Handle the version command."""
     print("HyperCode v0.1.0 (development)")
     print("A neurodivergent-first programming language")

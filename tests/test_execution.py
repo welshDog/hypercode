@@ -11,7 +11,7 @@ try:
 except ImportError:
     QISKIT_PRESENT = False
 
-def test_evaluator_quantum_execution_mock():
+def test_evaluator_quantum_execution_mock() -> None:
     """
     Test that the evaluator calls the backend.
     We mock the backend to ensure logic is correct even without Qiskit.
@@ -39,7 +39,7 @@ def test_evaluator_quantum_execution_mock():
         assert "Test_results" in evaluator.variables
         assert evaluator.variables["Test_results"] == {'0': 50, '1': 50}
 
-def test_evaluator_quantum_execution_integration():
+def test_evaluator_quantum_execution_integration() -> None:
     """
     Test actual execution if Qiskit is present.
     Skipped if Qiskit is not installed.

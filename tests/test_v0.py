@@ -3,7 +3,7 @@ from hypercode.parser.parser import parse
 from hypercode.interpreter.evaluator import Evaluator
 from hypercode.ast.nodes import Program, DataDecl, Literal
 
-def test_parse_simple_data():
+def test_parse_simple_data() -> None:
     code = '@data x: 42'
     program = parse(code)
     assert isinstance(program, Program)
@@ -13,7 +13,7 @@ def test_parse_simple_data():
     assert isinstance(program.statements[0].value, Literal)
     assert program.statements[0].value.value == 42
 
-def test_evaluate_print():
+def test_evaluate_print() -> None:
     code = """
     @data x: 10
     @print(x)
@@ -23,7 +23,7 @@ def test_evaluate_print():
     evaluator.evaluate(program)
     assert evaluator.output == ['10']
 
-def test_evaluate_logic_true():
+def test_evaluate_logic_true() -> None:
     code = """
     @data x: 10
     @check(x > 5) -> {
@@ -35,7 +35,7 @@ def test_evaluate_logic_true():
     evaluator.evaluate(program)
     assert evaluator.output == ['Big']
 
-def test_evaluate_logic_false():
+def test_evaluate_logic_false() -> None:
     code = """
     @data x: 1
     @check(x > 5) -> {
@@ -47,7 +47,7 @@ def test_evaluate_logic_false():
     evaluator.evaluate(program)
     assert evaluator.output == []
 
-def test_evaluate_arithmetic():
+def test_evaluate_arithmetic() -> None:
     code = """
     @data x: 10
     @data y: 20

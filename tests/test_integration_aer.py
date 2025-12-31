@@ -11,7 +11,7 @@ except ImportError:
     QISKIT_AVAILABLE = False
 
 @pytest.mark.skipif(not QISKIT_AVAILABLE, reason="Qiskit not installed")
-def test_aer_execution_bell_state():
+def test_aer_execution_bell_state() -> None:
     """
     Integration test using real Qiskit Aer simulator.
     Verifies that a Bell state circuit produces ~50/50 distribution.
@@ -44,7 +44,7 @@ def test_aer_execution_bell_state():
     print(f"Bell Results: {results}")
 
 @pytest.mark.skipif(not QISKIT_AVAILABLE, reason="Qiskit not installed")
-def test_aer_execution_parameterized():
+def test_aer_execution_parameterized() -> None:
     """
     Integration test for parameterized gates (RX).
     """

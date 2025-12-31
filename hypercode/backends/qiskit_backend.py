@@ -1,5 +1,6 @@
 from typing import Optional, Any, Dict, List, Tuple
 import sys
+from typing import cast
 
 from .base import BaseBackend
 from hypercode.ir.qir_nodes import QModule, QAlloc, QGate, QMeasure
@@ -130,11 +131,9 @@ class QiskitBackend(BaseBackend):
             # Execute
             job = SIMULATOR_BACKEND.run(tqc, **run_options)
             result = job.result()
-            counts = result.get_counts()
-            
+            counts = cast(Dict[str, int], result.get_counts())
             return counts
             
         except Exception as e:
             print(f"Execution Error ({SIMULATOR_NAME}): {e}", file=sys.stderr)
             return {}
-

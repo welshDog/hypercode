@@ -3,7 +3,7 @@ from hypercode.parser.parser import parse
 from hypercode.ir.lower_quantum import lower_circuit
 from hypercode.ir.qir_nodes import QModule, QAlloc, QGate, QMeasure, QEnd
 
-def test_lower_bell_circuit():
+def test_lower_bell_circuit() -> None:
     code = """
     @quantum Bell qubits 2
     H q0
@@ -42,7 +42,7 @@ def test_lower_bell_circuit():
     # 5. End
     assert isinstance(ir_module.instructions[4], QEnd)
 
-def test_lower_params_inline():
+def test_lower_params_inline() -> None:
     code = """
     @quantum Rot qubits 1
     RZ(1.57) q0
@@ -57,7 +57,7 @@ def test_lower_params_inline():
     assert gate.name == "RZ"
     assert gate.params == [1.57]
 
-def test_lower_params_expression():
+def test_lower_params_expression() -> None:
     code = """
     @quantum Rot qubits 1
     RZ(PI/2) q0

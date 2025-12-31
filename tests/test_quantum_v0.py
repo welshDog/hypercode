@@ -3,7 +3,7 @@ from hypercode.parser.parser import parse
 from hypercode.interpreter.evaluator import Evaluator
 from hypercode.ast.nodes import QuantumCircuitDecl, QGate, QMeasure
 
-def test_parse_quantum_bell():
+def test_parse_quantum_bell() -> None:
     code = """
     @quantum Bell qubits 2
     H q0
@@ -35,7 +35,7 @@ def test_parse_quantum_bell():
     assert qc.ops[2].qubit == 0
     assert qc.ops[2].target == "c0"
 
-def test_parse_quantum_params_inline():
+def test_parse_quantum_params_inline() -> None:
     # Test user request for inline params: RZ(3.14) q0
     code = """
     @quantum Rotate qubits 1
@@ -50,7 +50,7 @@ def test_parse_quantum_params_inline():
     # Literal 3.14
     assert gate.params[0].value == 3.14
 
-def test_parse_quantum_params_expression():
+def test_parse_quantum_params_expression() -> None:
     # Test RZ(PI/2) q0 - assuming PI is a variable for now
     code = """
     @data PI: 3.14159
@@ -69,7 +69,7 @@ def test_parse_quantum_params_expression():
     assert isinstance(gate.params[0].left, Variable)
     assert gate.params[0].left.name == "PI"
 
-def test_evaluate_quantum_stub():
+def test_evaluate_quantum_stub() -> None:
     code = """
     @quantum MyCirc qubits 3
     H q0
@@ -81,7 +81,7 @@ def test_evaluate_quantum_stub():
     assert "QuantumCircuit MyCirc: 3 qubits, 1 ops" in evaluator.output
     assert "MyCirc" in evaluator.variables
 
-def test_evaluate_quantum_mock_backend():
+def test_evaluate_quantum_mock_backend() -> None:
     """Test that the evaluator correctly calls the backend with lowered IR."""
     code = """
     @quantum MyCirc qubits 2
