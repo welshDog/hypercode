@@ -1,4 +1,4 @@
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from hypercode.ast.nodes import (
     QuantumCircuitDecl, QGate as AstQGate, QMeasure as AstQMeasure,
     Expr, Literal, Variable, BinaryOp
@@ -9,8 +9,8 @@ from hypercode.ir.qir_nodes import (
 import math
 
 class QuantumLowerer:
-    def __init__(self, constants: Dict[str, Any] = None):
-        self.constants = constants or {}
+    def __init__(self, constants: Optional[Dict[str, Any]] = None):
+        self.constants: Dict[str, Any] = constants or {}
         # Default constants
         if 'PI' not in self.constants:
             self.constants['PI'] = math.pi
@@ -40,9 +40,10 @@ class QuantumLowerer:
                     params=resolved_params
                 ))
             elif isinstance(op, AstQMeasure):
+                target = op.target if op.target is not None else f"c{op.qubit}"
                 instrs.append(IrQMeasure(
                     qubit=op.qubit,
-                    target=op.target
+                    target=target
                 ))
         
         # 3. End
@@ -68,6 +69,6 @@ class QuantumLowerer:
         else:
             raise ValueError(f"Unsupported expression type '{type(expr)}' in gate parameter")
 
-def lower_circuit(circuit: QuantumCircuitDecl, constants: Dict[str, Any] = None) -> QModule:
+def lower_circuit(circuit: QuantumCircuitDecl, constants: Optional[Dict[str, Any]] = None) -> QModule:
     lowerer = QuantumLowerer(constants)
     return lowerer.lower(circuit)
