@@ -1,0 +1,85 @@
+.container {
+  padding: 10px;
+  background: #2d3436;
+  border-radius: 8px;
+  border: 2px solid #00b894;
+  /* Bio Green */
+  width: 220px;
+  color: white;
+  font-family: 'Consolas', 'Monaco', monospace;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s ease;
+}
+
+.container.error {
+  border-color: #ff7675;
+  /* Error Red */
+  box-shadow: 0 0 10px rgba(255, 118, 117, 0.4);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+  font-size: 14px;
+  font-weight: bold;
+  color: #55efc4;
+}
+
+.icon {
+  margin-right: 6px;
+  font-size: 16px;
+}
+
+.textarea {
+  width: 100%;
+  height: 80px;
+  background: #1e272e;
+  border: 1px solid #636e72;
+  border-radius: 4px;
+  color: #dfe6e9;
+  font-family: 'Consolas', 'Monaco', monospace;
+  padding: 6px;
+  font-size: 12px;
+  resize: none;
+  outline: none;
+  letter-spacing: 1px;
+}
+
+.textarea:focus {
+  border-color: #74b9ff;
+}
+
+.textarea.invalid {
+  border-color: #ff7675;
+  background: rgba(255, 118, 117, 0.1);
+}
+
+.stats {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 6px;
+  font-size: 10px;
+  color: #b2bec3;
+}
+
+.errorMsg {
+  color: #ff7675;
+  font-size: 10px;
+  margin-top: 4px;
+  height: 12px;
+}
+
+.handle {
+  width: 10px !important;
+  height: 10px !important;
+  background: #00b894 !important;
+  border: 2px solid #fff !important;
+}
+
+/* LOD Low - Hide details */
+:global(.lod-low) .textarea,
+:global(.lod-low) .stats,
+:global(.lod-low) .errorMsg {
+  display: none;
+}
