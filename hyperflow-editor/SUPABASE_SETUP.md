@@ -16,43 +16,65 @@ Enable real-time cloud persistence for your HyperFlow Editor.
    VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
    ```
 
-## 3. Run SQL Setup
-Go to the **SQL Editor** in your Supabase dashboard and run this script to create the table and disable Row Level Security (RLS) for testing:
+## 3. Run Production SQL
+Go to the **SQL Editor** in your Supabase dashboard and run this script to create the production-ready schema with RLS, triggers, and indexes:
 
 ```sql
--- Create the flows table
-create table flows (
-  id text primary key,
+-- ⚡ HyperFlow Production-Ready Schema
+
+-- 1. Create table with smart defaults and owner_id
+CREATE TABLE IF NOT EXISTS public.flows (
+  id text PRIMARY KEY,
+  owner_id uuid NOT NULL default auth.uid(), -- 🔒 Security: each flow has an owner
   name text,
   description text,
-  nodes jsonb default '[]'::jsonb,
-  edges jsonb default '[]'::jsonb,
-  viewport jsonb default '{}'::jsonb,
-  tags text[] default array[]::text[],
-  created_at timestamptz default now(),
-  updated_at timestamptz default now()
+  nodes jsonb NOT NULL DEFAULT '[]'::jsonb,
+  edges jsonb NOT NULL DEFAULT '[]'::jsonb,
+  viewport jsonb NOT NULL DEFAULT '{}'::jsonb,
+  tags text[] NOT NULL DEFAULT ARRAY[]::text[],
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
 );
 
--- ⚠️ DISABLE RLS FOR DEV (Allows anyone with the URL to read/write)
--- For production, you must enable RLS and set up Auth policies.
-alter table flows enable row level security;
+-- 2. Auto-update timestamp trigger (No more manual dates!)
+CREATE OR REPLACE FUNCTION public.flows_updated_at()
+RETURNS trigger AS $$
+BEGIN
+  NEW.updated_at := now();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
 
-create policy "Enable read access for all users"
-on flows for select
-using (true);
+CREATE TRIGGER set_updated_at
+BEFORE UPDATE ON public.flows
+FOR EACH ROW
+EXECUTE FUNCTION flows_updated_at();
 
-create policy "Enable insert access for all users"
-on flows for insert
-with check (true);
+-- 3. Performance indexes (Speed at scale)
+CREATE INDEX IF NOT EXISTS idx_flows_owner ON public.flows (owner_id);
+CREATE INDEX IF NOT EXISTS idx_flows_created ON public.flows (created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_flows_tags ON public.flows USING GIN (tags);
 
-create policy "Enable update access for all users"
-on flows for update
-using (true);
+-- 4. Security policies (RLS Enabled)
+ALTER TABLE public.flows ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users manage own flows"
+ON public.flows
+FOR ALL
+TO authenticated
+USING (owner_id = auth.uid())
+WITH CHECK (owner_id = auth.uid());
 ```
 
-## 4. Verify
-Restart your development server:
-```bash
-npm run dev
-```
-Check the browser console. You should see: `Using Supabase Cloud Storage`.
+## 4. Verify & Authenticate
+**Important:** This schema enforces authentication.
+1.  **Create a User:** Go to **Authentication** in Supabase and add a user (or use the magic link feature).
+2.  **Login in App:** Since the current UI doesn't have a login screen yet, you can temporarily hardcode a login in `App.tsx` or use the Supabase JS client in the console to sign in:
+    ```js
+    await supabase.auth.signInWithPassword({ email: '...', password: '...' })
+    ```
+3.  **Restart:**
+    ```bash
+    npm run dev
+    ```
+4.  Check the browser console. You should see `Using Supabase Cloud Storage`.

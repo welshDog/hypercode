@@ -10,19 +10,25 @@ export class SupabaseStorageProvider implements IStorageProvider {
   }
 
   async save(flow: SavedFlow): Promise<void> {
+    const { data: { user } } = await this.client.auth.getUser();
+    if (!user) {
+      console.warn('User not authenticated, skipping save.');
+      return;
+    }
+
     const { error } = await this.client
       .from(this.TABLE_NAME)
       .upsert({
         id: flow.id,
+        owner_id: user.id,
         name: flow.name,
         description: flow.description,
         nodes: flow.nodes,
         edges: flow.edges,
         viewport: flow.viewport,
-        tags: flow.tags,
-        updated_at: new Date().toISOString(),
-        // If it's a new record, created_at will be set by default or we can set it here if we track it in the flow object
-        created_at: flow.createdAt || new Date().toISOString(),
+        tags: flow.tags || [],
+        // created_at handled by DB default for new rows
+        // updated_at handled by DB trigger
       });
 
     if (error) {
