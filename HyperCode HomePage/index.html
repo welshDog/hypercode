@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HyperCode - A New Programming Language</title>
+    <link rel="stylesheet" href="assets/css/main.css">
+</head>
+
+<body>
+
+    <header class="navbar">
+        <div class="container">
+            <h1 class="logo">HyperCode</h1>
+            <nav>
+                <ul>
+                    <li><a href="#features">Features</a></li>
+                    <li><a href="#example">Example</a></li>
+                    <li><a href="#getting-started">Get Started</a></li>
+                    <li><a href="https://github.com/welshDog/THE-HYPERCODE" target="_blank">GitHub</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <section class="hero">
+            <div class="container">
+                <h2>A Programming Language for Neurodivergent Brains</h2>
+                <p>HyperCode is designed from the ground up to be intuitive, accessible, and powerful for both classical
+                    and quantum computing.</p>
+                <a href="#getting-started" class="btn">Start Learning</a>
+
+                <div class="video-wrapper"
+                    style="margin-top: 3rem; position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 800px; margin-left: auto; margin-right: auto; border-radius: 12px; box-shadow: 0 20px 40px rgba(0,0,0,0.2);">
+                    <video controls
+                        style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover;">
+                        <source src="assets/video/manifesto.mp4" type="video/mp4">
+                        Your browser does not support the video tag.
+                    </video>
+                </div>
+            </div>
+        </section>
+
+        <section id="features" class="features">
+            <div class="container">
+                <h3>Core Features</h3>
+                <div class="feature-grid">
+                    <div class="feature-item">
+                        <h4>Intuitive Syntax</h4>
+                        <p>A clean, clutter-free syntax that's easy to read and write, reducing cognitive load.</p>
+                    </div>
+                    <div class="feature-item">
+                        <h4>Hybrid Computing</h4>
+                        <p>Seamlessly switch between classical and quantum logic within the same program.</p>
+                    </div>
+                    <div class="feature-item">
+                        <h4>Multi-Backend</h4>
+                        <p>Run your code on classical CPUs, Qiskit simulators, or even molecular computing backends.</p>
+                    </div>
+                    <div class="feature-item">
+                        <h4>AI-Native (MCP)</h4>
+                        <p>Built for the Model Context Protocol. Assistants like Claude can write, validate, and run
+                            HyperCode directly.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="mcp-promo" class="mcp-promo"
+            style="background-color: #f0f4f8; padding: 4rem 0; text-align: center;">
+            <div class="container">
+                <h3>🤖 Your AI Co-Pilot is Ready</h3>
+                <p style="max-width: 800px; margin: 0 auto 1.5rem;">
+                    HyperCode ships with a production-ready <strong>MCP Server</strong>. Connect Claude Desktop or
+                    Cursor to get instant syntax validation,
+                    real-time execution, and documentation lookups—all without leaving your chat window.
+                </p>
+                <a href="https://github.com/welshDog/THE-HYPERCODE/blob/main/docs/MCP_DEMO.md" class="btn"
+                    style="background-color: #6c5ce7; color: white;">View the MCP Demo</a>
+            </div>
+        </section>
+
+        <section id="example" class="code-example">
+            <div class="container">
+                <h3>See It in Action</h3>
+                <p>Here's how you can create a quantum Bell pair in HyperCode:</p>
+                <pre><code>
+@quantum_function: bell_pair() -> Bits
+    @circuit: c
+        @qubits: q[2]
+        @register: r[2]
+
+        # Put the first qubit in a superposition
+        @hadamard: q[0]
+
+        # Entangle the qubits
+        @cnot: q[0], q[1]
+
+        # Measure the results
+        @measure: q[0] -> r[0]
+        @measure: q[1] -> r[1]
+
+    @return: r
+                </code></pre>
+            </div>
+        </section>
+
+        <section id="getting-started" class="getting-started">
+            <div class="container">
+                <h3>Get Started with HyperCode</h3>
+                <p>The HyperCode interpreter is a command-line tool. You can run your first program in a few steps.</p>
+                <pre><code>
+# 1. Clone the repository
+git clone https://github.com/welshDog/THE-HYPERCODE.git
+
+# 2. Navigate to the project directory
+cd THE-HYPERCODE/THE-HYPERCODE
+
+# 3. Run the Bell Pair example
+python -m hypercode run examples/bell_pair.hc
+                </code></pre>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 The HyperCode Project. Licensed under CC-BY 4.0.</p>
+        </div>
+    </footer>
+
+</body>
+
+</html>

@@ -1,0 +1,22 @@
+.quantumEdgePath {
+  fill: none;
+  stroke: var(--color-success, #00b894);
+  stroke-width: 3px;
+  filter: drop-shadow(0 0 3px var(--color-success, #00b894));
+  transition: stroke 0.3s ease;
+  animation: quantumFlow 20s linear infinite;
+}
+
+.quantumEdgePath:hover {
+  stroke-width: 4px;
+  filter: drop-shadow(0 0 6px var(--color-success, #00b894));
+}
+
+@keyframes quantumFlow {
+  0% {
+    stroke-dashoffset: 0;
+  }
+  100% {
+    stroke-dashoffset: -100;
+  }
+}
