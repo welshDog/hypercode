@@ -43,6 +43,17 @@ export interface TranslateNodeData extends BioNodeData {
   codonTable: 'Standard' | 'Mitochondrial';
 }
 
+// 3.5. CRISPR Node (Targeting)
+// Input: DNA
+// Output: Target Match Location + Off-target risk
+export interface CRISPRNodeData extends BioNodeData {
+  type: 'DNA';
+  guideRNA: string; // 20bp gRNA
+  pam: string;      // e.g., "NGG"
+  matchIndex: number; // -1 if no match
+  isOnTarget: boolean;
+}
+
 // 4. Enzyme Node (Cutter)
 // Input: DNA
 // Output: DNA Fragment (Left), DNA Fragment (Right)

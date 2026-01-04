@@ -86,3 +86,20 @@ button:focus-visible {
 .react-flow__node.selected {
   z-index: 1000;
 }
+
+/* --- Zen Mode (ADHD Friendly) --- */
+.hyperflow-container.zen-mode {
+  --bg-color: #1e272e; /* Darker, calmer background */
+}
+
+.hyperflow-container.zen-mode .react-flow__background {
+  opacity: 0.3; /* Subtle grid */
+}
+
+/* Disable Animations in Zen Mode */
+.hyperflow-container.zen-mode * {
+  animation-duration: 0s !important;
+  transition-duration: 0s !important;
+}
+
+/* Hide non-essential controls in Zen Mode if possible (would need specific classes on them) */

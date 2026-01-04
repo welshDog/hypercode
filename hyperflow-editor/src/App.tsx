@@ -22,7 +22,10 @@ import HelixEdge from './edges/HelixEdge';
 import { generateQiskitCode } from './engine/QiskitExporter';
 import { generateBioPythonCode } from './engine/BioPythonExporter';
 import ExportModal from './components/ExportModal';
-import { QUANTUM_PRESET, CENTRAL_DOGMA_PRESET, RESTRICTION_ENZYME_PRESET, type Preset } from './presets';
+import { QUANTUM_PRESET, CENTRAL_DOGMA_PRESET, RESTRICTION_ENZYME_PRESET, ZEN_MODE_PRESET, CLONING_PRESET, type Preset } from './presets';
+import CRISPRNode from './nodes/CRISPRNode';
+import type { SavedFlow } from './storage/StorageProvider';
+import { MockCloudStorageProvider } from './storage/MockCloudStorageProvider';
 
 // --- React Flow Types ---
 const nodeTypes: NodeTypes = {
@@ -32,6 +35,7 @@ const nodeTypes: NodeTypes = {
   translate: TranslateNode,
   enzyme: EnzymeNode,
   ligase: LigaseNode,
+  crispr: CRISPRNode,
 };
 
 const edgeTypes: EdgeTypes = {
@@ -48,11 +52,123 @@ function App() {
   // Focus Flow State
   const [zoomLevel, setZoomLevel] = useState(1);
   const [isHyperfocus, setIsHyperfocus] = useState(false);
+  const [isZenMode, setIsZenMode] = useState(false);
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
+  const [rfInstance, setRfInstance] = useState<any>(null);
+
+  // Cloud Sync State
+  const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'synced' | 'error'>('idle');
+  const [storageProvider] = useState(() => new MockCloudStorageProvider());
+
+  // Initial Load from Cloud
+  useEffect(() => {
+    const loadFromCloud = async () => {
+      try {
+        const saved = await storageProvider.load('current-flow');
+        if (saved) {
+          setNodes(saved.nodes);
+          setEdges(saved.edges);
+          if (saved.viewport) setZoomLevel(saved.viewport.zoom);
+          console.log('Restored flow from cloud');
+        }
+      } catch (e) {
+        console.warn('No cloud save found or load failed', e);
+      }
+    };
+    loadFromCloud();
+  }, [storageProvider, setNodes, setEdges]);
+
+  // Auto-Save Effect
+  useEffect(() => {
+    const saveTimer = setTimeout(() => {
+      // Only save if we have content
+      if (nodes.length === 0) return;
+
+      setSyncStatus('syncing');
+      const flow: SavedFlow = {
+        id: 'current-flow', // Single slot for now
+        name: 'Auto-Saved Flow',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        nodes,
+        edges,
+        viewport: { x: 0, y: 0, zoom: zoomLevel }
+      };
+
+      storageProvider.save(flow)
+        .then(() => setSyncStatus('synced'))
+        .catch((err) => {
+          console.error('Auto-save failed', err);
+          setSyncStatus('error');
+        });
+
+    }, 2000); // 2 second debounce
+
+    return () => clearTimeout(saveTimer);
+  }, [nodes, edges, zoomLevel, storageProvider]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // 4. Reset View (Ctrl+0 or Space when not typing)
+      if ((e.ctrlKey || e.metaKey) && e.key === '0') {
+        e.preventDefault();
+        rfInstance?.fitView({ duration: 800 });
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [rfInstance]);
 
   // Export Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [exportCode, setExportCode] = useState('');
+
+  // Storage Handlers
+  const handleSaveFile = useCallback(() => {
+    const flow: SavedFlow = {
+      id: 'manual-save', // For file export, ID is less relevant
+      name: 'HyperFlow Export',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      nodes,
+      edges,
+      viewport: { x: 0, y: 0, zoom: zoomLevel } // Approximate viewport
+    };
+
+    const json = JSON.stringify(flow, null, 2);
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `hyperflow-${new Date().toISOString().slice(0, 10)}.json`;
+    link.click();
+    URL.revokeObjectURL(url);
+  }, [nodes, edges, zoomLevel]);
+
+  const handleLoadFile = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const content = e.target?.result as string;
+      try {
+        const flow = JSON.parse(content) as SavedFlow;
+        setNodes(flow.nodes || []);
+        setEdges(flow.edges || []);
+        if (flow.viewport) {
+          // Viewport restore if needed
+        }
+        alert('Flow loaded successfully!');
+      } catch (err) {
+        alert('Failed to load flow: Invalid JSON');
+        console.error(err);
+      }
+    };
+    reader.readAsText(file);
+    // Reset input
+    event.target.value = '';
+  };
 
   const loadPreset = (preset: Preset) => {
     // Reset graph with new preset
@@ -73,6 +189,65 @@ function App() {
     setExportCode(code);
     setIsModalOpen(true);
   };
+
+  // Keyboard Shortcuts Effect
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ignore if input/select is focused
+      if (['INPUT', 'SELECT', 'TEXTAREA'].includes((e.target as HTMLElement).tagName)) {
+        return;
+      }
+
+      // 1. Toggle Hyperfocus (Shift + F)
+      if (e.shiftKey && e.key.toLowerCase() === 'f') {
+        e.preventDefault();
+        setIsHyperfocus(prev => !prev);
+      }
+
+      // 2. Save File (Ctrl/Cmd + S)
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+        e.preventDefault();
+        handleSaveFile();
+      }
+
+      // 3. Load File (Ctrl/Cmd + O)
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'o') {
+        e.preventDefault();
+        // Trigger hidden file input click
+        const fileInput = document.getElementById('hidden-file-input');
+        if (fileInput) fileInput.click();
+      }
+
+      // 4. Reset View (Ctrl+0)
+      if ((e.ctrlKey || e.metaKey) && e.key === '0') {
+        e.preventDefault();
+        rfInstance?.fitView({ duration: 800 });
+      }
+
+      // 5. Zen Mode Toggle (Shift + Z)
+      if (e.shiftKey && e.key.toLowerCase() === 'z') {
+        e.preventDefault();
+        setIsZenMode(prev => {
+          const next = !prev;
+          if (next) {
+            // Entering Zen Mode
+            loadPreset(ZEN_MODE_PRESET);
+            setIsHyperfocus(true);
+          } else {
+            // Exiting Zen Mode -> Load Default? Or just stay?
+            // Let's just toggle the flag and let user choose preset
+            // Or restore Central Dogma
+            loadPreset(CENTRAL_DOGMA_PRESET);
+            setIsHyperfocus(false);
+          }
+          return next;
+        });
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [handleSaveFile, rfInstance]);
 
   const onConnect = useCallback((params: RFConnection) => setEdges((eds) => addEdge(params, eds)), [setEdges]);
 
@@ -176,35 +351,107 @@ function App() {
         onSelectionChange={handleSelectionChange}
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
+        onInit={setRfInstance}
         fitView
       >
         <Background color="#b2bec3" gap={20} />
         <Controls />
         <Panel position="top-right">
           <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+            {/* Sync Status Indicator */}
+            <div style={{
+              padding: '8px 12px',
+              borderRadius: '20px',
+              background: syncStatus === 'error' ? '#ff7675' : syncStatus === 'synced' ? '#55efc4' : syncStatus === 'syncing' ? '#ffeaa7' : 'rgba(255,255,255,0.2)',
+              color: '#2d3436',
+              fontWeight: 'bold',
+              fontSize: '0.8rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '5px',
+              transition: 'all 0.3s ease',
+              opacity: syncStatus === 'idle' ? 0.5 : 1
+            }}>
+              {syncStatus === 'syncing' && '🔄'}
+              {syncStatus === 'synced' && '☁️'}
+              {syncStatus === 'error' && '❌'}
+              {syncStatus === 'idle' && '☁️'}
+              {syncStatus === 'syncing' ? 'Syncing...' : syncStatus === 'synced' ? 'Saved' : syncStatus === 'error' ? 'Error' : 'Ready'}
+            </div>
+
             {/* Preset Selector */}
             <select
               onChange={(e) => {
-                if (e.target.value === 'quantum') loadPreset(QUANTUM_PRESET);
-                if (e.target.value === 'dogma') loadPreset(CENTRAL_DOGMA_PRESET);
-                if (e.target.value === 'enzyme') loadPreset(RESTRICTION_ENZYME_PRESET);
+                const val = e.target.value;
+                if (val === 'quantum') { loadPreset(QUANTUM_PRESET); setIsZenMode(false); }
+                if (val === 'dogma') { loadPreset(CENTRAL_DOGMA_PRESET); setIsZenMode(false); }
+                if (val === 'enzyme') { loadPreset(RESTRICTION_ENZYME_PRESET); setIsZenMode(false); }
+                if (val === 'cloning') { loadPreset(CLONING_PRESET); setIsZenMode(false); }
+                if (val === 'zen') {
+                  loadPreset(ZEN_MODE_PRESET);
+                  setIsZenMode(true);
+                  setIsHyperfocus(true);
+                }
               }}
               defaultValue="dogma"
               style={{
                 padding: '10px',
                 borderRadius: '5px',
-                border: 'none',
+                border: isZenMode ? '2px solid #00b894' : 'none',
                 background: '#dfe6e9',
                 color: '#2d3436',
-                fontWeight: 'bold',
                 cursor: 'pointer',
-                boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+                fontWeight: 'bold',
+                fontFamily: 'Inter, sans-serif'
               }}
             >
-              <option value="dogma">🧬 Central Dogma Demo</option>
-              <option value="enzyme">✂️ Restriction Enzyme Demo</option>
-              <option value="quantum">⚛️ Quantum Circuit Demo</option>
+              <option value="dogma">🧬 Central Dogma</option>
+              <option value="enzyme">✂️ Restriction</option>
+              <option value="cloning">🧪 Cloning</option>
+              <option value="quantum">⚛️ Quantum</option>
+              <option value="zen">🧘 Zen Mode</option>
             </select>
+
+            {/* Storage Controls */}
+            <button
+              onClick={handleSaveFile}
+              style={{
+                padding: '10px 15px',
+                borderRadius: '5px',
+                border: 'none',
+                background: '#0984e3',
+                color: 'white',
+                cursor: 'pointer',
+                fontWeight: 'bold',
+                fontFamily: 'Inter, sans-serif'
+              }}
+              title="Download Flow as JSON"
+            >
+              💾 Save
+            </button>
+
+            <label
+              style={{
+                padding: '10px 15px',
+                borderRadius: '5px',
+                border: 'none',
+                background: '#6c5ce7',
+                color: 'white',
+                cursor: 'pointer',
+                fontWeight: 'bold',
+                fontFamily: 'Inter, sans-serif',
+                display: 'inline-block'
+              }}
+              title="Load Flow from JSON"
+            >
+              📂 Load
+              <input
+                type="file"
+                accept=".json"
+                onChange={handleLoadFile}
+                style={{ display: 'none' }}
+              />
+            </label>
 
             {/* Hyperfocus Toggle */}
             <button
@@ -219,9 +466,10 @@ function App() {
                 fontWeight: 'bold',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '5px'
+                gap: '5px',
+                fontFamily: 'Inter, sans-serif'
               }}
-              title="Toggle Hyperfocus Mode"
+              title="Toggle Hyperfocus Mode (Shift+F)"
             >
               {isHyperfocus ? '🎯 Hyperfocus ON' : '👁️ Focus'}
             </button>
@@ -267,7 +515,7 @@ function App() {
         onClose={() => setIsModalOpen(false)}
         code={exportCode}
       />
-    </div>
+    </div >
   );
 }
 

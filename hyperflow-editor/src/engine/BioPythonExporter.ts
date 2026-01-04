@@ -4,7 +4,7 @@ import { type SequenceNodeData, type TranscribeNodeData, type TranslateNodeData,
 // --- Types ---
 interface BioOp {
   id: string;
-  type: 'sequence' | 'transcribe' | 'translate' | 'enzyme' | 'ligase';
+  type: 'sequence' | 'transcribe' | 'translate' | 'enzyme' | 'ligase' | 'crispr';
   sequence?: string;
   isValid?: boolean;
   data?: any; // To hold specific node data like enzyme name or fragments
@@ -146,6 +146,21 @@ export const generateBioPythonCode = (nodes: Node[], edges: Edge[]): string => {
           code += `    print("⚠️ Ligation Failed: Incompatible fragments selected")\n`;
         }
         code += `\n`;
+      }
+    } else if (op.type === 'crispr') {
+      if (hasDNA && dnaValid) {
+        const gRNA = op.data.guideRNA || '';
+        const pam = op.data.pam || 'NGG';
+        code += `    # Node: CRISPR-Cas9 Target Search\n`;
+        code += `    guide_rna = "${gRNA}"\n`;
+        code += `    pam = "${pam}"\n`;
+        code += `    # Construct Regex (N -> .)\n`;
+        code += `    pam_regex = pam.replace('N', '.')\n`;
+        code += `    target_regex = f"{guide_rna}{pam_regex}"\n`;
+        code += `    matches = [m.start() for m in re.finditer(target_regex, str(${dnaVar}), re.IGNORECASE)]\n`;
+        code += `    print(f"✂️  CRISPR Matches: {len(matches)} found at indices {matches}")\n`;
+        code += `    if len(matches) > 0: print("   ✅ Target Acquired")\n`;
+        code += `    else: print("   ❌ No Target Found")\n\n`;
       }
     }
   });

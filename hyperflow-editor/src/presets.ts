@@ -99,6 +99,58 @@ export const RESTRICTION_ENZYME_PRESET: Preset = {
     {
       id: 'dna-source',
       type: 'sequence',
+      position: { x: 100, y: 200 },
+      data: {
+        label: 'Viral DNA',
+        type: 'DNA',
+        sequence: 'GAATTC', // EcoRI site
+        isValid: true
+      } as SequenceNodeData
+    },
+    {
+      id: 'enzyme-node',
+      type: 'enzyme',
+      position: { x: 400, y: 200 },
+      data: {
+        label: 'EcoRI',
+        type: 'DNA',
+        enzyme: 'EcoRI',
+        mode: 'all',
+        sites: [],
+        fragments: [],
+        isValid: true
+      } as unknown as EnzymeNodeData
+    }
+  ],
+  edges: [
+    { id: 'e1', source: 'dna-source', target: 'enzyme-node', type: 'helix', animated: true }
+  ]
+};
+
+export const ZEN_MODE_PRESET: Preset = {
+  name: 'Zen Mode (ADHD Friendly)',
+  nodes: [
+    {
+      id: 'zen-dna',
+      type: 'sequence',
+      position: { x: 400, y: 300 },
+      data: {
+        label: 'Focus Sequence',
+        type: 'DNA',
+        sequence: 'ATG',
+        isValid: true
+      } as SequenceNodeData
+    }
+  ],
+  edges: []
+};
+
+export const CLONING_PRESET: Preset = {
+  name: 'Molecular Cloning Demo',
+  nodes: [
+    {
+      id: 'dna-source',
+      type: 'sequence',
       position: { x: 100, y: 300 },
       data: {
         label: 'DNA Source',

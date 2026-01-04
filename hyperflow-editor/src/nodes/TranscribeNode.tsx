@@ -47,8 +47,29 @@ const TranscribeNode: React.FC<NodeProps<TranscribeNodeData>> = ({ id, data }) =
 
       if (sourceNodeData.sequence) {
         const dna = sourceNodeData.sequence;
-        // Transcription: Replace T with U (Basic model)
-        const rna = dna.replace(/T/g, 'U');
+        let rna = '';
+
+        // Handle Strand Selection
+        if (data.isCodingStrand === false) {
+          // Template Strand: Complement then replace T->U
+          // A->U, T->A, G->C, C->G
+          // Reverse complement if reading 3'->5'?
+          // Standard convention: User inputs 5'->3' template strand.
+          // mRNA is complementary and antiparallel.
+          // For simplicity in this tool: "Template Strand" means we take the complement.
+          rna = dna.split('').map(base => {
+            switch (base) {
+              case 'A': return 'U';
+              case 'T': return 'A';
+              case 'G': return 'C';
+              case 'C': return 'G';
+              default: return base;
+            }
+          }).join('');
+        } else {
+          // Coding Strand (Default): Just replace T->U
+          rna = dna.replace(/T/g, 'U');
+        }
 
         // Only update if changed to avoid loops
         if (data.sequence !== rna) {
@@ -100,6 +121,26 @@ const TranscribeNode: React.FC<NodeProps<TranscribeNodeData>> = ({ id, data }) =
       </div>
 
       <div className={styles.body}>
+        <div className={styles.row}>
+          <label className={styles.label}>Strand:</label>
+          <select
+            className={styles.select}
+            value={data.isCodingStrand !== false ? 'coding' : 'template'}
+            onChange={(e) => {
+              const isCoding = e.target.value === 'coding';
+              setNodes(nds => nds.map(n => {
+                if (n.id === id) {
+                  return { ...n, data: { ...n.data, isCodingStrand: isCoding } };
+                }
+                return n;
+              }));
+            }}
+          >
+            <option value="coding">Coding (5'→3')</option>
+            <option value="template">Template (3'→5')</option>
+          </select>
+        </div>
+
         <div className={styles.preview}>
           {isError ? 'Upstream Error' : (data.sequence || '')}
         </div>
