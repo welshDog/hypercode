@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Discussions
+    url: https://github.com/welshDog/THE-HYPERCODE/discussions
+    about: Ask questions and share ideas
+  - name: Roadmap
+    url: https://github.com/welshDog/THE-HYPERCODE/projects
+    about: Track high-level progress

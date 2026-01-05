@@ -1,0 +1,26 @@
+id,bucket,priority,time,task,details,files
+CRIT1,Critical,CRITICAL,~1w,Publish formal grammar specification,Create EBNF or ANTLR .g4 and docs/grammar.md so language is formally defined.,docs/grammar.md
+CRIT2,Critical,CRITICAL,~1w,Define .hir IR text format,Human-readable IR format with examples to debug IR pipeline.,docs/ir-format.md
+CRIT3,Critical,CRITICAL,1-2d,Add coverage + CI enforcement,"pytest-cov, 80% target, coverage badge in README and CI gate.","pytest.ini,.github/workflows/test.yml,README.md"
+CRIT4,Critical,CRITICAL,~1w,Security threat model for AI agents,docs/security/ai-sandboxing.md covering LLM-generated code + RCE risks.,docs/security/ai-sandboxing.md
+CRIT5,Critical,CRITICAL,30m,Fix Python version enforcement,Add python_requires >=3.10 to packaging config.,pyproject.toml
+CRIT6,Critical,CRITICAL,1-2h,Pin runtime + dev dependencies,Pin in pyproject.toml and requirements-dev.txt; wire security CI (pip-audit/bandit).,"pyproject.toml,requirements-dev.txt,.github/workflows/security.yml"
+CRIT7,Critical,CRITICAL,1h,Add no eval/exec guarantees,CI grep gate and tests ensuring no unsafe eval/exec outside test code.,".github/workflows/security.yml,hypercode/interpreter"
+QW1,Quick Win,HIGH,5-20m,Fix repo URLs to THE-HYPERCODE,Update all references from hypercode to THE-HYPERCODE.,"README.md,pyproject.toml"
+QW2,Quick Win,HIGH,10-20m,Clarify code vs docs licenses,"Docs CC-BY-4.0, code MIT/Apache-2.0, clearly documented in README + LICENSE.","README.md,LICENSE"
+QW3,Quick Win,HIGH,30-45m,Add CI + coverage badges + status table,"Show CI, coverage, and maturity status table in README.",README.md
+QW4,Quick Win,MEDIUM,30-60m,Quick Start + CLI help in README,"5-command Quick Start, document core hypercode CLI commands.",README.md
+QW5,Quick Win,MEDIUM,1-2h,Language Tour + examples,"3 short examples (classical, quantum, hybrid) with brief explanation.","README.md,examples/"
+QW6,Quick Win,MEDIUM,1-2h,Add CONTRIBUTING + VERSIONING,Contributor guide and SemVer policy.,"docs/CONTRIBUTING.md,docs/VERSIONING.md"
+CORE1,Core Engine/Backends,HIGH,2-4w,Backend abstraction + engine module,Define Backend interface and hypercode.engine wrapper for CLI/API.,"hypercode/engine.py,hypercode/backends/base.py"
+CORE2,Core Engine/Backends,HIGH,1-2w,Minimal classical backend,"Implement basic interpreter, a few examples, and tests.","hypercode/backends/classical_backend.py,examples/classical.hc,tests/test_classical_backend.py"
+CORE3,Core Engine/Backends,HIGH,1w,IR spec + invariants,"Centralize IR spec, SSA rules, and add validation + tests.","docs/ir-spec.md,hypercode/ir,qirnodes,tests/test_ir_invariants.py"
+CORE4,Core Engine/Backends,HIGH,3-5d,Backend choice and resource limits,"Registry of backends, MAX_QUBITS/DEPTH/SHOTS limits and enforcement.","hypercode/config.py,hypercode/evaluator.py,hypercode/backends/qiskit_backend.py"
+TEST1,Testing/CI,HIGH,2-4d,Full CI pipeline,"Run black/ruff, mypy, pytest, docs build in CI.",.github/workflows/test.yml
+TEST2,Testing/CI,HIGH,2-3d,CLI + example integration tests,Tests for CLI commands and running all examples with expected outputs.,"tests/test_cli.py,tests/test_examples.py"
+TEST3,Testing/CI,HIGH,3-5d,AST/IR golden + fuzz tests,Snapshot tests and Hypothesis-based fuzzing for parser/IR.,"tests/test_syntax.py,tests/test_ir_fuzz.py"
+DOC1,Docs/Community,HIGH,3-7d,README overhaul + ARCHITECTURE.md,New README structure + dedicated architecture doc with diagrams.,"README.md,docs/ARCHITECTURE.md"
+DOC2,Docs/Community,MEDIUM,1-2w,Tutorial path + FAQ,Progressive tutorial series and FAQ covering positioning questions.,"docs/tutorials/,docs/FAQ.md"
+DOC3,Docs/Community,MEDIUM,1-2d,Community channels + outreach posts,"Discord/GitHub Discussions, dev.to + Reddit posts telling the HyperCode story.","README.md,OUTREACH.md"
+BIG1,Big Bets,BIG BET,1-2m,Visual editor prototype,React/ReactFlow node editor with text<->visual sync for core subset.,visual-editor/
+BIG2,Big Bets,BIG BET,1-2m,LSP + AI co-dev tools,"Language Server, VS Code extension, hooks for AI agents.","lsp/,editor-extension/,ai-agents/"

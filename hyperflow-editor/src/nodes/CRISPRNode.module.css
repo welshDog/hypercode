@@ -1,0 +1,153 @@
+.container {
+  background: rgba(18, 18, 24, 0.95);
+  border: 1px solid rgba(255, 0, 128, 0.3); /* CRISPR Pink */
+  border-radius: 12px;
+  min-width: 320px;
+  padding: 0;
+  color: #fff;
+  font-family: 'JetBrains Mono', monospace;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(8px);
+  transition: all 0.2s ease;
+}
+
+.container:hover {
+  border-color: rgba(255, 0, 128, 0.8);
+  box-shadow: 0 0 15px rgba(255, 0, 128, 0.2);
+}
+
+.container.error {
+  border-color: #ff4444;
+}
+
+.container.repaired {
+  border-color: #00ff88;
+  box-shadow: 0 0 15px rgba(0, 255, 136, 0.2);
+}
+
+.header {
+  background: linear-gradient(90deg, rgba(255, 0, 128, 0.2) 0%, rgba(100, 0, 255, 0.2) 100%);
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: #ff0080;
+}
+
+.icon {
+  font-size: 1.2rem;
+}
+
+.section {
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.label {
+  display: block;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  color: #888;
+  margin-bottom: 6px;
+  letter-spacing: 1px;
+}
+
+.input {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  padding: 8px;
+  color: #fff;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8rem;
+  transition: all 0.2s;
+  box-sizing: border-box; /* Fix width overflow */
+}
+
+.input:focus {
+  outline: none;
+  border-color: #ff0080;
+  background: rgba(255, 0, 128, 0.05);
+}
+
+.row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.modeToggle {
+  display: flex;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 4px;
+  padding: 2px;
+  margin-bottom: 8px;
+}
+
+.modeBtn {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: #666;
+  padding: 6px;
+  font-size: 0.75rem;
+  cursor: pointer;
+  border-radius: 3px;
+  font-weight: bold;
+  transition: all 0.2s;
+}
+
+.modeBtn.active {
+  background: rgba(255, 0, 128, 0.2);
+  color: #ff0080;
+}
+
+.status {
+  padding: 12px 16px;
+  font-size: 0.75rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 0 0 12px 12px;
+}
+
+.statusText {
+  color: #888;
+}
+
+.status.success .statusText {
+  color: #00ff88;
+}
+
+.status.error .statusText {
+  color: #ff4444;
+}
+
+.handle {
+  width: 10px;
+  height: 10px;
+  background: #444;
+  border: 2px solid #666;
+  transition: all 0.2s;
+}
+
+.handleIn {
+  background: #00ffff; /* DNA In */
+  border-color: #008888;
+}
+
+.handleOut {
+  background: #ff0080; /* Edited DNA Out */
+  border-color: #880044;
+}
+
+.handle:hover {
+  transform: scale(1.2);
+}

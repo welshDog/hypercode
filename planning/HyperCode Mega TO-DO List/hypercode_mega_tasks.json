@@ -1,0 +1,263 @@
+[
+  {
+    "id": "CRIT1",
+    "bucket": "Critical",
+    "priority": "CRITICAL",
+    "time": "~1w",
+    "task": "Publish formal grammar specification",
+    "details": "Create EBNF or ANTLR .g4 and docs/grammar.md so language is formally defined.",
+    "files": "docs/grammar.md"
+  },
+  {
+    "id": "CRIT2",
+    "bucket": "Critical",
+    "priority": "CRITICAL",
+    "time": "~1w",
+    "task": "Define .hir IR text format",
+    "details": "Human-readable IR format with examples to debug IR pipeline.",
+    "files": "docs/ir-format.md"
+  },
+  {
+    "id": "CRIT3",
+    "bucket": "Critical",
+    "priority": "CRITICAL",
+    "time": "1-2d",
+    "task": "Add coverage + CI enforcement",
+    "details": "pytest-cov, 80% target, coverage badge in README and CI gate.",
+    "files": "pytest.ini,.github/workflows/test.yml,README.md"
+  },
+  {
+    "id": "CRIT4",
+    "bucket": "Critical",
+    "priority": "CRITICAL",
+    "time": "~1w",
+    "task": "Security threat model for AI agents",
+    "details": "docs/security/ai-sandboxing.md covering LLM-generated code + RCE risks.",
+    "files": "docs/security/ai-sandboxing.md"
+  },
+  {
+    "id": "CRIT5",
+    "bucket": "Critical",
+    "priority": "CRITICAL",
+    "time": "30m",
+    "task": "Fix Python version enforcement",
+    "details": "Add python_requires >=3.10 to packaging config.",
+    "files": "pyproject.toml"
+  },
+  {
+    "id": "CRIT6",
+    "bucket": "Critical",
+    "priority": "CRITICAL",
+    "time": "1-2h",
+    "task": "Pin runtime + dev dependencies",
+    "details": "Pin in pyproject.toml and requirements-dev.txt; wire security CI (pip-audit/bandit).",
+    "files": "pyproject.toml,requirements-dev.txt,.github/workflows/security.yml"
+  },
+  {
+    "id": "CRIT7",
+    "bucket": "Critical",
+    "priority": "CRITICAL",
+    "time": "1h",
+    "task": "Add no eval/exec guarantees",
+    "details": "CI grep gate and tests ensuring no unsafe eval/exec outside test code.",
+    "files": ".github/workflows/security.yml,hypercode/interpreter"
+  },
+  {
+    "id": "QW1",
+    "bucket": "Quick Win",
+    "priority": "HIGH",
+    "time": "5-20m",
+    "task": "Fix repo URLs to THE-HYPERCODE",
+    "details": "Update all references from hypercode to THE-HYPERCODE.",
+    "files": "README.md,pyproject.toml"
+  },
+  {
+    "id": "QW2",
+    "bucket": "Quick Win",
+    "priority": "HIGH",
+    "time": "10-20m",
+    "task": "Clarify code vs docs licenses",
+    "details": "Docs CC-BY-4.0, code MIT/Apache-2.0, clearly documented in README + LICENSE.",
+    "files": "README.md,LICENSE"
+  },
+  {
+    "id": "QW3",
+    "bucket": "Quick Win",
+    "priority": "HIGH",
+    "time": "30-45m",
+    "task": "Add CI + coverage badges + status table",
+    "details": "Show CI, coverage, and maturity status table in README.",
+    "files": "README.md"
+  },
+  {
+    "id": "QW4",
+    "bucket": "Quick Win",
+    "priority": "MEDIUM",
+    "time": "30-60m",
+    "task": "Quick Start + CLI help in README",
+    "details": "5-command Quick Start, document core hypercode CLI commands.",
+    "files": "README.md"
+  },
+  {
+    "id": "QW5",
+    "bucket": "Quick Win",
+    "priority": "MEDIUM",
+    "time": "1-2h",
+    "task": "Language Tour + examples",
+    "details": "3 short examples (classical, quantum, hybrid) with brief explanation.",
+    "files": "README.md,examples/"
+  },
+  {
+    "id": "QW6",
+    "bucket": "Quick Win",
+    "priority": "MEDIUM",
+    "time": "1-2h",
+    "task": "Add CONTRIBUTING + VERSIONING",
+    "details": "Contributor guide and SemVer policy.",
+    "files": "docs/CONTRIBUTING.md,docs/VERSIONING.md"
+  },
+  {
+    "id": "CORE1",
+    "bucket": "Core Engine/Backends",
+    "priority": "HIGH",
+    "time": "2-4w",
+    "task": "Backend abstraction + engine module",
+    "details": "Define Backend interface and hypercode.engine wrapper for CLI/API.",
+    "files": "hypercode/engine.py,hypercode/backends/base.py"
+  },
+  {
+    "id": "CORE2",
+    "bucket": "Core Engine/Backends",
+    "priority": "HIGH",
+    "time": "1-2w",
+    "task": "Minimal classical backend",
+    "details": "Implement basic interpreter, a few examples, and tests.",
+    "files": "hypercode/backends/classical_backend.py,examples/classical.hc,tests/test_classical_backend.py"
+  },
+  {
+    "id": "CORE3",
+    "bucket": "Core Engine/Backends",
+    "priority": "HIGH",
+    "time": "1w",
+    "task": "IR spec + invariants",
+    "details": "Centralize IR spec, SSA rules, and add validation + tests.",
+    "files": "docs/ir-spec.md,hypercode/ir,qirnodes,tests/test_ir_invariants.py"
+  },
+  {
+    "id": "CORE4",
+    "bucket": "Core Engine/Backends",
+    "priority": "HIGH",
+    "time": "3-5d",
+    "task": "Backend choice and resource limits",
+    "details": "Registry of backends, MAX_QUBITS/DEPTH/SHOTS limits and enforcement.",
+    "files": "hypercode/config.py,hypercode/evaluator.py,hypercode/backends/qiskit_backend.py"
+  },
+  {
+    "id": "TEST1",
+    "bucket": "Testing/CI",
+    "priority": "HIGH",
+    "time": "2-4d",
+    "task": "Full CI pipeline",
+    "details": "Run black/ruff, mypy, pytest, docs build in CI.",
+    "files": ".github/workflows/test.yml"
+  },
+  {
+    "id": "TEST2",
+    "bucket": "Testing/CI",
+    "priority": "HIGH",
+    "time": "2-3d",
+    "task": "CLI + example integration tests",
+    "details": "Tests for CLI commands and running all examples with expected outputs.",
+    "files": "tests/test_cli.py,tests/test_examples.py"
+  },
+  {
+    "id": "TEST3",
+    "bucket": "Testing/CI",
+    "priority": "HIGH",
+    "time": "3-5d",
+    "task": "AST/IR golden + fuzz tests",
+    "details": "Snapshot tests and Hypothesis-based fuzzing for parser/IR.",
+    "files": "tests/test_syntax.py,tests/test_ir_fuzz.py"
+  },
+  {
+    "id": "DOC1",
+    "bucket": "Docs/Community",
+    "priority": "HIGH",
+    "time": "3-7d",
+    "task": "README overhaul + ARCHITECTURE.md",
+    "details": "New README structure + dedicated architecture doc with diagrams.",
+    "files": "README.md,docs/ARCHITECTURE.md"
+  },
+  {
+    "id": "DOC2",
+    "bucket": "Docs/Community",
+    "priority": "MEDIUM",
+    "time": "1-2w",
+    "task": "Tutorial path + FAQ",
+    "details": "Progressive tutorial series and FAQ covering positioning questions.",
+    "files": "docs/tutorials/,docs/FAQ.md"
+  },
+  {
+    "id": "DOC3",
+    "bucket": "Docs/Community",
+    "priority": "MEDIUM",
+    "time": "1-2d",
+    "task": "Community channels + outreach posts",
+    "details": "Discord/GitHub Discussions, dev.to + Reddit posts telling the HyperCode story.",
+    "files": "README.md,OUTREACH.md"
+  },
+  {
+    "id": "VIS1",
+    "bucket": "Visual Cockpit (HyperFlow)",
+    "priority": "DONE",
+    "time": "Completed",
+    "task": "Bio-Logic Engine & Base Nodes",
+    "details": "Implemented BioLogic.ts engine, Sequence/Enzyme/Ligase nodes with validation logic.",
+    "files": "hyperflow-editor/src/engine/BioLogic.ts,hyperflow-editor/src/nodes/"
+  },
+  {
+    "id": "VIS2",
+    "bucket": "Visual Cockpit (HyperFlow)",
+    "priority": "DONE",
+    "time": "Completed",
+    "task": "Focus Flow (Neurodivergent UX)",
+    "details": "Hyperfocus Mode (dimming distractions) and Semantic LOD (zoom-based detail hiding).",
+    "files": "hyperflow-editor/src/App.tsx,hyperflow-editor/src/index.css"
+  },
+  {
+    "id": "VIS3",
+    "bucket": "Visual Cockpit (HyperFlow)",
+    "priority": "DONE",
+    "time": "Completed",
+    "task": "Hybrid Code Exporters",
+    "details": "BioPython (Cloning ops) and Qiskit (Quantum circuits) code generation from graph.",
+    "files": "hyperflow-editor/src/engine/BioPythonExporter.ts,hyperflow-editor/src/engine/QiskitExporter.ts"
+  },
+  {
+    "id": "VIS4",
+    "bucket": "Visual Cockpit (HyperFlow)",
+    "priority": "IN_PROGRESS",
+    "time": "1-2w",
+    "task": "Advanced DNA Operations",
+    "details": "Expand to Transcription, Translation, and CRISPR/Cas9 nodes.",
+    "files": "hyperflow-editor/src/nodes/TranscribeNode.tsx"
+  },
+  {
+    "id": "VIS5",
+    "bucket": "Visual Cockpit (HyperFlow)",
+    "priority": "NEXT",
+    "time": "2-3w",
+    "task": "Cloud Sync & Project Management",
+    "details": "Save/Load flows to cloud/local storage.",
+    "files": "hyperflow-editor/src/hooks/useFlowStorage.ts"
+  },
+  {
+    "id": "BIG2",
+    "bucket": "Big Bets",
+    "priority": "BIG BET",
+    "time": "1-2m",
+    "task": "LSP + AI co-dev tools",
+    "details": "Language Server, VS Code extension, hooks for AI agents.",
+    "files": "lsp/,editor-extension/,ai-agents/"
+  }
+]
