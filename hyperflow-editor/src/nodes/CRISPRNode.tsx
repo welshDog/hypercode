@@ -1,137 +1,168 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Handle, Position, type NodeProps, useReactFlow, useNodes, useEdges } from 'reactflow';
 import styles from './CRISPRNode.module.css';
-import { type CRISPRNodeData, type SequenceNodeData } from '../engine/BioTypes';
+import { type CRISPRNodeData } from '../engine/BioTypes';
+import { performCRISPR } from '../engine/CRISPRLogic';
 
 const CRISPRNode: React.FC<NodeProps<CRISPRNodeData>> = ({ id, data }) => {
   const { setNodes } = useReactFlow();
-  const nodes = useNodes();
   const edges = useEdges();
+  const nodes = useNodes();
 
-  // 1. Get Upstream DNA
-  const sourceNodeData = useMemo(() => {
-    const edge = edges.find(e => e.target === id);
-    if (!edge) return undefined;
-    const node = nodes.find(n => n.id === edge.source);
-    // Can accept DNA from Sequence, Enzyme, Ligase
-    // For simplicity, checking if it has a 'sequence' field and type 'DNA'
-    if (node && (node.data as any).type === 'DNA') {
-      return node.data as SequenceNodeData;
-    }
-    return undefined;
-  }, [edges, nodes, id]);
+  // Local state
+  const [guideRNA, setGuideRNA] = useState(data.guideRNA || '');
+  const [pam, setPam] = useState(data.pam || 'NGG');
+  const [repairMode, setRepairMode] = useState<'NHEJ' | 'HDR'>(data.repairMode || 'NHEJ');
+  const [repairTemplate, setRepairTemplate] = useState(data.repairTemplate || '');
 
-  const [gRNA, setGRNA] = useState(data.guideRNA || '');
-  const [pam, setPAM] = useState(data.pam || 'NGG');
+  // Inputs from Upstream
+  // Assuming single target input
+  const connection = edges.find(edge => edge.target === id);
+  const upstreamNode = connection ? nodes.find(n => n.id === connection.source) : null;
 
-  // 2. Search Logic
+  // Check if upstream data has 'sequence' or 'editedSequence' or 'amplicon'
+  // We need a standard 'sequence' field for DNA.
+  const targetDNA = (upstreamNode as any)?.data?.sequence ||
+    (upstreamNode as any)?.data?.amplicon ||
+    (upstreamNode as any)?.data?.editedSequence || '';
+
+  // Logic
   useEffect(() => {
-    if (sourceNodeData && sourceNodeData.sequence) {
-      const dna = sourceNodeData.sequence.toUpperCase();
-      const currentGRNA = (data.guideRNA || '').toUpperCase();
-      const currentPAM = (data.pam || 'NGG').toUpperCase();
+    let edited = '';
+    let status: 'scanning' | 'cut' | 'repaired' | 'error' = 'scanning';
+    let message = '';
+    let cutIndex = -1;
 
-      if (!currentGRNA || currentGRNA.length < 10) {
-        // Too short to match reliably
-         if (data.isOnTarget) {
-             updateNodeData(false, -1);
-         }
-         return;
-      }
-
-      // Convert PAM to Regex (N -> .)
-      const pamRegexStr = currentPAM.replace(/N/g, '.');
-      // Full target: gRNA + PAM
-      const targetRegex = new RegExp(`${currentGRNA}${pamRegexStr}`, 'g');
-      
-      const match = targetRegex.exec(dna);
-      const isMatch = !!match;
-      const index = match ? match.index : -1;
-
-      if (isMatch !== data.isOnTarget || index !== data.matchIndex) {
-         updateNodeData(isMatch, index);
-      }
+    if (targetDNA) {
+      const result = performCRISPR(targetDNA, guideRNA, pam, repairMode, repairTemplate);
+      edited = result.editedSequence;
+      status = result.status;
+      message = result.message || '';
+      cutIndex = result.cutIndex;
     } else {
-        // Reset if no input
-        if (data.isOnTarget) {
-            updateNodeData(false, -1);
-        }
+      status = 'scanning';
+      message = 'Waiting for DNA...';
     }
-  }, [sourceNodeData, data.guideRNA, data.pam, id]);
 
-  const updateNodeData = (isOnTarget: boolean, matchIndex: number) => {
-    setNodes(nds => nds.map(n => {
-        if (n.id === id) {
-            return { ...n, data: { ...n.data, isOnTarget, matchIndex } };
-        }
-        return n;
-    }));
-  };
-
-  // UI Handlers
-  const handleGRNAChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      const val = e.target.value;
-      setGRNA(val);
-      // Debounce or direct update? Direct for now, but update node data
-      setNodes(nds => nds.map(n => {
-        if (n.id === id) {
-            return { ...n, data: { ...n.data, guideRNA: val } };
-        }
-        return n;
-      }));
-  };
-
-  const handlePAMChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      const val = e.target.value;
-      setPAM(val);
-      setNodes(nds => nds.map(n => {
-        if (n.id === id) {
-            return { ...n, data: { ...n.data, pam: val } };
-        }
-        return n;
-      }));
-  };
+    // Update Node Data if changed
+    if (
+      edited !== data.editedSequence ||
+      status !== data.status ||
+      message !== data.message ||
+      cutIndex !== data.cutIndex ||
+      guideRNA !== data.guideRNA ||
+      pam !== data.pam ||
+      repairMode !== data.repairMode ||
+      repairTemplate !== data.repairTemplate
+    ) {
+      setNodes((nodes) =>
+        nodes.map((node) => {
+          if (node.id === id) {
+            return {
+              ...node,
+              data: {
+                ...node.data,
+                guideRNA,
+                pam,
+                repairMode,
+                repairTemplate,
+                editedSequence: edited,
+                status,
+                errorMessage: message,
+                cutIndex,
+                sequence: edited // Standard output for next node
+              },
+            };
+          }
+          return node;
+        })
+      );
+    }
+  }, [id, guideRNA, pam, repairMode, repairTemplate, targetDNA, setNodes, data]);
 
   return (
-    <div className={`${styles.container} ${(data as any).className || ''}`}>
-      <Handle type="target" position={Position.Left} className={styles.handle} />
-      
+    <div className={`${styles.container} ${styles[data.status] || ''}`}>
       <div className={styles.header}>
-        <span>✂️</span> CRISPR-Cas9
+        <span className={styles.icon}>🧬✂️</span>
+        CRISPR/Cas9 Editor
       </div>
 
-      <div className={styles.body}>
-        <div className={styles.inputGroup}>
-            <label className={styles.label}>Guide RNA (5'→3')</label>
-            <input 
-                className={styles.input} 
-                value={gRNA} 
-                onChange={handleGRNAChange}
-                placeholder="e.g. GACTG..." 
-            />
-        </div>
-        <div className={styles.inputGroup}>
-            <label className={styles.label}>PAM Sequence</label>
-            <input 
-                className={styles.input} 
-                value={pam} 
-                onChange={handlePAMChange}
-                placeholder="NGG" 
-            />
+      <Handle
+        type="target"
+        position={Position.Left}
+        id="target-dna"
+        className={`${styles.handle} ${styles.handleIn}`}
+      />
+
+      {/* Guide RNA Section */}
+      <div className={styles.section}>
+        <label className={styles.label}>Guide RNA (20nt)</label>
+        <input
+          className={styles.input}
+          value={guideRNA}
+          onChange={(e) => setGuideRNA(e.target.value)}
+          placeholder="Sequence upstream of PAM..."
+        />
+      </div>
+
+      {/* PAM Section */}
+      <div className={styles.section}>
+        <label className={styles.label}>PAM Sequence</label>
+        <input
+          className={styles.input}
+          value={pam}
+          onChange={(e) => setPam(e.target.value)}
+          placeholder="e.g. NGG"
+        />
+      </div>
+
+      {/* Repair Mode Toggle */}
+      <div className={styles.section}>
+        <label className={styles.label}>Repair Mechanism</label>
+        <div className={styles.modeToggle}>
+          <button
+            className={`${styles.modeBtn} ${repairMode === 'NHEJ' ? styles.active : ''}`}
+            onClick={() => setRepairMode('NHEJ')}
+          >
+            NHEJ (Knockout)
+          </button>
+          <button
+            className={`${styles.modeBtn} ${repairMode === 'HDR' ? styles.active : ''}`}
+            onClick={() => setRepairMode('HDR')}
+          >
+            HDR (Edit)
+          </button>
         </div>
 
-        {sourceNodeData ? (
-            <div className={`${styles.result} ${data.isOnTarget ? styles.match : styles.noMatch}`}>
-                {data.isOnTarget 
-                    ? `✅ Target Found at index ${data.matchIndex}` 
-                    : `❌ No target site found`}
-            </div>
-        ) : (
-            <div className={styles.result}>Waiting for DNA...</div>
+        {repairMode === 'HDR' && (
+          <div style={{ marginTop: '8px' }}>
+            <label className={styles.label}>Repair Template</label>
+            <input
+              className={styles.input}
+              value={repairTemplate}
+              onChange={(e) => setRepairTemplate(e.target.value)}
+              placeholder="Sequence to insert..."
+            />
+          </div>
         )}
       </div>
 
-      <Handle type="source" position={Position.Right} className={styles.handle} />
+      {/* Status Footer */}
+      <div className={`${styles.status} ${data.status === 'repaired' ? styles.success : ''} ${data.status === 'error' ? styles.error : ''}`}>
+        <span className={styles.statusText}>
+          {data.status === 'scanning' && 'Scanning...'}
+          {data.status === 'repaired' && 'EDIT COMPLETE'}
+          {data.status === 'error' && 'TARGET NOT FOUND'}
+        </span>
+        {data.cutIndex != null && data.cutIndex > -1 && <span style={{ fontSize: '0.65rem', opacity: 0.7 }}>Cut @ {data.cutIndex}</span>}
+      </div>
+
+      <Handle
+        type="source"
+        position={Position.Right}
+        id="edited-dna"
+        className={`${styles.handle} ${styles.handleOut}`}
+      />
     </div>
   );
 };

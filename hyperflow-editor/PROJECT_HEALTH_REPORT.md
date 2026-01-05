@@ -67,10 +67,10 @@ The **HyperFlow Editor** is in a healthy, active development state. The core arc
 
 ## 📋 Action Plan (Next 48 Hours)
 
-1.  **Documentation Update**: Update `README.md` to include "Zen Mode" and "Cloud Sync" instructions.
-2.  **Backend Integration**: Obtain credentials for real cloud storage (Firebase/Supabase) and implement `RealCloudStorageProvider`.
-3.  **Unit Testing**: Set up Vitest to test `BioLogic.ts` (ensure EcoRI actually cuts where it says it does).
-4.  **UI Polish**: Replace native alerts with a custom "Toast" component for errors/success messages.
+1.  **Testing**: Set up Vitest to test `BioLogic.ts` and `PCRUtils.ts` (ensure math is right).
+2.  **Phase 6 (CRISPR)**: Implement Guide RNA design and off-target scoring.
+3.  **UI Polish**: Replace native alerts with a custom "Toast" component.
+4.  **Auth UI**: Add a proper Login/Signup screen (currently manual).
 
 ---
 

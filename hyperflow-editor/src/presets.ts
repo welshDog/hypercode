@@ -1,12 +1,86 @@
 import { type Node, type Edge } from 'reactflow';
 import { type QiskitNodeData } from './engine/QiskitExporter';
-import { type EnzymeNodeData, type LigaseNodeData, type SequenceNodeData, type TranscribeNodeData, type TranslateNodeData } from './engine/BioTypes';
+import { type EnzymeNodeData, type LigaseNodeData, type SequenceNodeData, type TranscribeNodeData, type TranslateNodeData, type PCRNodeData, type CRISPRNodeData, type GoldenGateNodeData } from './engine/BioTypes';
 
 export interface Preset {
   name: string;
   nodes: Node[];
   edges: Edge[];
 }
+
+export const PCR_PRESET: Preset = {
+  name: 'PCR Amplification Demo',
+  nodes: [
+    {
+      id: 'template-dna',
+      type: 'sequence',
+      position: { x: 100, y: 200 },
+      data: {
+        label: 'Template DNA',
+        type: 'DNA',
+        sequence: 'ATGCGTACGTAGCTAGCT', // Simple template
+        isValid: true
+      } as SequenceNodeData
+    },
+    {
+      id: 'pcr-node',
+      type: 'pcr',
+      position: { x: 500, y: 200 },
+      data: {
+        label: 'PCR Thermocycler',
+        type: 'DNA',
+        forwardPrimer: 'ATGC',
+        reversePrimer: 'AGCT',
+        annealingTemp: 55,
+        forwardTm: 0,
+        reverseTm: 0,
+        amplicon: '',
+        error: '',
+        isValid: true
+      } as PCRNodeData
+    }
+  ],
+  edges: [
+    { id: 'e-template-pcr', source: 'template-dna', target: 'pcr-node', type: 'helix', animated: true }
+  ]
+};
+
+export const CRISPR_PRESET: Preset = {
+  name: 'CRISPR-Cas9 Editing',
+  nodes: [
+    {
+      id: 'target-dna',
+      type: 'sequence',
+      position: { x: 100, y: 200 },
+      data: {
+        label: 'Target Genome',
+        type: 'DNA',
+        sequence: 'ATGCGTACGTAGCTAGCTNGG', // Includes PAM
+        isValid: true
+      } as SequenceNodeData
+    },
+    {
+      id: 'crispr-node',
+      type: 'crispr',
+      position: { x: 500, y: 200 },
+      data: {
+        label: 'Cas9 System',
+        type: 'DNA',
+        guideRNA: '',
+        pam: 'NGG',
+        repairMode: 'NHEJ',
+        repairTemplate: '',
+        editedSequence: '',
+        cutIndex: -1,
+        status: 'scanning',
+        isValid: true
+      } as CRISPRNodeData
+    }
+  ],
+  edges: [
+    { id: 'e-dna-crispr', source: 'target-dna', target: 'crispr-node', type: 'helix', animated: true }
+  ]
+};
 
 export const QUANTUM_PRESET: Preset = {
   name: 'Quantum Circuit Demo',
@@ -128,21 +202,70 @@ export const RESTRICTION_ENZYME_PRESET: Preset = {
 };
 
 export const ZEN_MODE_PRESET: Preset = {
-  name: 'Zen Mode (ADHD Friendly)',
+  name: 'Zen Mode (Empty)',
+  nodes: [],
+  edges: []
+};
+
+export const GOLDEN_GATE_PRESET: Preset = {
+  name: 'Golden Gate Assembly (BsaI)',
   nodes: [
     {
-      id: 'zen-dna',
+      id: 'promoter',
       type: 'sequence',
-      position: { x: 400, y: 300 },
+      position: { x: 50, y: 100 },
       data: {
-        label: 'Focus Sequence',
+        label: 'Promoter (Part 1)',
         type: 'DNA',
-        sequence: 'ATG',
+        // GGTCTC (BsaI) + A (Spacer) + GGAG (Overhang) + [PROMOTER] + TACT (Overhang) + A + GAGACC (BsaI Rev)
+        sequence: 'GGTCTCAGGAGTTGACAGCTAGCTCAGTCCTAGGTATAATGCTAGCTACTAGAGACC',
         isValid: true
       } as SequenceNodeData
+    },
+    {
+      id: 'rbs-cds',
+      type: 'sequence',
+      position: { x: 50, y: 300 },
+      data: {
+        label: 'RBS+GFP (Part 2)',
+        type: 'DNA',
+        // GGTCTC A TACT (Match Prev) + [RBS+CDS] + AATG (Next) + A GAGACC
+        sequence: 'GGTCTCATACTAAAGAGGAGAAATACTAGATGCGTAAAGGAGAAGAACTTTTCACTGGAGTTGTCCAATAAATGGAGACC',
+        isValid: true
+      } as SequenceNodeData
+    },
+    {
+      id: 'terminator',
+      type: 'sequence',
+      position: { x: 50, y: 500 },
+      data: {
+        label: 'Terminator (Part 3)',
+        type: 'DNA',
+        // GGTCTC A AATG (Match Prev) + [TERM] + GCGC (End) + A GAGACC
+        sequence: 'GGTCTCAAATGCCAGGCATCAAATAAAACGAAAGGCTCAGTCGAAAGACTGGGCCTTTCGTTTTATCTGTTGTTTGTCGGTGAACGCTCTCTACTAGAGTCACACTGGCTCACCTTCGGGTGGGCCTTTCTGCGTTTATAGAGACC',
+        isValid: true
+      } as SequenceNodeData
+    },
+    {
+      id: 'gg-node',
+      type: 'goldengate',
+      position: { x: 500, y: 300 },
+      data: {
+        label: 'Golden Gate Assembly',
+        type: 'DNA',
+        enzyme: 'BsaI',
+        parts: [],
+        assemblyResult: '',
+        isCircular: true,
+        isValid: true
+      } as GoldenGateNodeData
     }
   ],
-  edges: []
+  edges: [
+    { id: 'e1', source: 'promoter', target: 'gg-node', type: 'helix', animated: true },
+    { id: 'e2', source: 'rbs-cds', target: 'gg-node', type: 'helix', animated: true },
+    { id: 'e3', source: 'terminator', target: 'gg-node', type: 'helix', animated: true }
+  ]
 };
 
 export const CLONING_PRESET: Preset = {

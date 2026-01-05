@@ -1,97 +1,153 @@
 .container {
-  min-width: 180px;
-  background: #fff;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  font-family: 'Inter', sans-serif;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  background: rgba(18, 18, 24, 0.95);
+  border: 1px solid rgba(255, 0, 128, 0.3); /* CRISPR Pink */
+  border-radius: 12px;
+  min-width: 320px;
+  padding: 0;
+  color: #fff;
+  font-family: 'JetBrains Mono', monospace;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(8px);
   transition: all 0.2s ease;
 }
 
 .container:hover {
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-  transform: translateY(-1px);
+  border-color: rgba(255, 0, 128, 0.8);
+  box-shadow: 0 0 15px rgba(255, 0, 128, 0.2);
 }
 
-.container.dimmed {
-  opacity: 0.15;
-  filter: grayscale(100%);
+.container.error {
+  border-color: #ff4444;
+}
+
+.container.repaired {
+  border-color: #00ff88;
+  box-shadow: 0 0 15px rgba(0, 255, 136, 0.2);
 }
 
 .header {
-  background: #d63031;
-  /* Darker red for better white text contrast */
-  color: #ffffff;
-  padding: 10px 14px;
-  /* Increased padding */
-  border-radius: 8px 8px 0 0;
+  background: linear-gradient(90deg, rgba(255, 0, 128, 0.2) 0%, rgba(100, 0, 255, 0.2) 100%);
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   font-weight: 700;
-  /* Bolder */
-  font-size: 15px;
-  /* Larger */
   display: flex;
   align-items: center;
   gap: 8px;
+  font-size: 0.9rem;
   letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: #ff0080;
 }
 
-.body {
-  padding: 14px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+.icon {
+  font-size: 1.2rem;
+}
+
+.section {
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .label {
-  font-size: 12px;
-  /* Increased from 11px */
-  color: #555;
-  /* Darker for better contrast against white bg */
-  font-weight: 600;
+  display: block;
+  font-size: 0.7rem;
   text-transform: uppercase;
-  margin-bottom: 4px;
+  color: #888;
+  margin-bottom: 6px;
+  letter-spacing: 1px;
 }
 
 .input {
   width: 100%;
-  padding: 8px;
-  border: 2px solid #ddd;
-  /* Thicker border */
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 4px;
-  font-family: 'Fira Code', monospace;
-  font-size: 13px;
-  /* Increased from 12px */
-  color: #2d3436;
+  padding: 8px;
+  color: #fff;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8rem;
+  transition: all 0.2s;
+  box-sizing: border-box; /* Fix width overflow */
 }
 
 .input:focus {
-  border-color: #ff4757;
   outline: none;
+  border-color: #ff0080;
+  background: rgba(255, 0, 128, 0.05);
 }
 
-.result {
-  margin-top: 4px;
-  padding: 8px;
-  background: #f8f9fa;
+.row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.modeToggle {
+  display: flex;
+  background: rgba(0, 0, 0, 0.3);
   border-radius: 4px;
-  font-size: 12px;
-  border-left: 3px solid #ccc;
+  padding: 2px;
+  margin-bottom: 8px;
 }
 
-.match {
-  border-left-color: #2ed573;
-  background: #e6ffea;
-  color: #1e7e34;
+.modeBtn {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: #666;
+  padding: 6px;
+  font-size: 0.75rem;
+  cursor: pointer;
+  border-radius: 3px;
+  font-weight: bold;
+  transition: all 0.2s;
 }
 
-.noMatch {
-  border-left-color: #ff4757;
-  background: #ffe6e6;
-  color: #c0392b;
+.modeBtn.active {
+  background: rgba(255, 0, 128, 0.2);
+  color: #ff0080;
+}
+
+.status {
+  padding: 12px 16px;
+  font-size: 0.75rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 0 0 12px 12px;
+}
+
+.statusText {
+  color: #888;
+}
+
+.status.success .statusText {
+  color: #00ff88;
+}
+
+.status.error .statusText {
+  color: #ff4444;
 }
 
 .handle {
   width: 10px;
   height: 10px;
-  background: #555;
+  background: #444;
+  border: 2px solid #666;
+  transition: all 0.2s;
+}
+
+.handleIn {
+  background: #00ffff; /* DNA In */
+  border-color: #008888;
+}
+
+.handleOut {
+  background: #ff0080; /* Edited DNA Out */
+  border-color: #880044;
+}
+
+.handle:hover {
+  transform: scale(1.2);
 }

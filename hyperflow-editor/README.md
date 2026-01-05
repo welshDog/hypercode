@@ -69,6 +69,7 @@ HyperFlow is the visual interface for **The HyperCode**, designed to be a **Neur
     *   `EnzymeNode`: Handles motif search and fragment generation.
     *   `LigaseNode`: Handles fragment selection, overhang matching, and circularization.
     *   `SequenceNode`: The "Source of Truth" for DNA data.
+    *   `PCRNode`: Simulates thermocycling, annealing, and extension.
 *   **/src/edges**: Custom edge visualizations.
     *   `HelixEdge`: Animated DNA double helix style.
     *   `QuantumEdge`: Wavy superposition style.

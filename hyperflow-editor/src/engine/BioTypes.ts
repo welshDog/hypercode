@@ -43,16 +43,8 @@ export interface TranslateNodeData extends BioNodeData {
   codonTable: 'Standard' | 'Mitochondrial';
 }
 
-// 3.5. CRISPR Node (Targeting)
-// Input: DNA
-// Output: Target Match Location + Off-target risk
-export interface CRISPRNodeData extends BioNodeData {
-  type: 'DNA';
-  guideRNA: string; // 20bp gRNA
-  pam: string;      // e.g., "NGG"
-  matchIndex: number; // -1 if no match
-  isOnTarget: boolean;
-}
+// 3.5. [REMOVED DUPLICATE]
+
 
 // 4. Enzyme Node (Cutter)
 // Input: DNA
@@ -75,5 +67,50 @@ export interface LigaseNodeData extends BioNodeData {
   selectedRightFragmentIndex: number | null;
   ligatedSequence: string;
   circular?: boolean; // Toggles plasmid closure check
+  errorMessage?: string;
+}
+
+// 6. PCR Node (Amplifier)
+// Input: Template DNA
+// Params: Forward Primer, Reverse Primer
+// Output: Amplified DNA (Amplicon)
+export interface PCRNodeData extends BioNodeData {
+  type: 'DNA';
+  forwardPrimer: string;
+  reversePrimer: string;
+  amplicon: string;
+  forwardTm: number;
+  reverseTm: number;
+  annealingTemp: number;
+  error?: string; // e.g. "Primers not found"
+}
+
+// 7. CRISPR Node (Editor)
+// Input: Target DNA
+// Params: sgRNA, PAM, Repair Template (optional)
+// Output: Edited DNA
+export interface CRISPRNodeData extends BioNodeData {
+  message: string;
+  type: 'DNA';
+  guideRNA: string;
+  pam: string; // e.g., "NGG"
+  repairMode: 'NHEJ' | 'HDR';
+  repairTemplate: string; // Used if mode is HDR
+  cutIndex: number | null; // -1 or null if no cut
+  editedSequence: string;
+  status: 'scanning' | 'cut' | 'repaired' | 'error';
+}
+
+// 8. Golden Gate Assembly Node
+// Input: Multiple DNA parts
+// Params: Enzyme (BsaI, BbsI, etc.)
+// Output: Assembled Plasmid/Linear Construct
+export interface GoldenGateNodeData extends BioNodeData {
+  type: 'DNA';
+  enzyme: 'BsaI' | 'BbsI' | 'BsmBI';
+  assemblyResult: string;
+  parts: { id: string; name: string; sequence: string; overhangs: { left: string; right: string } }[];
+  isCircular: boolean;
+  error?: string;
   errorMessage?: string;
 }

@@ -22,12 +22,15 @@ import HelixEdge from './edges/HelixEdge';
 import { generateQiskitCode } from './engine/QiskitExporter';
 import { generateBioPythonCode } from './engine/BioPythonExporter';
 import ExportModal from './components/ExportModal';
-import { QUANTUM_PRESET, CENTRAL_DOGMA_PRESET, RESTRICTION_ENZYME_PRESET, ZEN_MODE_PRESET, CLONING_PRESET, type Preset } from './presets';
+import { QUANTUM_PRESET, CENTRAL_DOGMA_PRESET, RESTRICTION_ENZYME_PRESET, ZEN_MODE_PRESET, CLONING_PRESET, PCR_PRESET, CRISPR_PRESET, GOLDEN_GATE_PRESET, type Preset } from './presets';
 import CRISPRNode from './nodes/CRISPRNode';
 import type { SavedFlow } from './storage/StorageProvider';
 import { MockCloudStorageProvider } from './storage/MockCloudStorageProvider';
 import { supabase } from './lib/supabase';
 import { SupabaseStorageProvider } from './storage/SupabaseStorageProvider';
+import PCRNode from './nodes/PCRNode';
+import GoldenGateNode from './nodes/GoldenGateNode';
+import CompilerPanel from './components/CompilerPanel';
 
 // --- React Flow Types ---
 const nodeTypes: NodeTypes = {
@@ -38,6 +41,8 @@ const nodeTypes: NodeTypes = {
   enzyme: EnzymeNode,
   ligase: LigaseNode,
   crispr: CRISPRNode,
+  pcr: PCRNode,
+  goldengate: GoldenGateNode,
 };
 
 const edgeTypes: EdgeTypes = {
@@ -60,6 +65,12 @@ function App() {
 
   // Cloud Sync State
   const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'synced' | 'error'>('idle');
+
+  // Compiler State
+  const [isCompilerOpen, setIsCompilerOpen] = useState(false);
+  const [compiledCode, setCompiledCode] = useState('');
+  const [simulationResults, setSimulationResults] = useState<any>(null);
+
   const [storageProvider] = useState(() => {
     if (supabase) {
       console.log('Using Supabase Cloud Storage');
@@ -341,6 +352,38 @@ function App() {
     }));
   }, [isHyperfocus, selectedNodeId, edges, setNodes]);
 
+  const handleCompile = async () => {
+    if (!rfInstance) return;
+
+    const flow = rfInstance.toObject();
+
+    try {
+      setCompiledCode("Compiling...");
+      setSimulationResults(null);
+      setIsCompilerOpen(true);
+
+      const response = await fetch('http://localhost:8000/compile', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(flow),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Compiler Error: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      setCompiledCode(data.code);
+      setSimulationResults(data.simulation);
+    } catch (err) {
+      console.error(err);
+      setCompiledCode(`Error compiling flow:\n${err}`);
+      setSimulationResults(null);
+    }
+  };
+
   // Trigger update when relevant state changes
   // We need a useEffect that calls this
   useEffect(() => {
@@ -396,6 +439,9 @@ function App() {
                 if (val === 'dogma') { loadPreset(CENTRAL_DOGMA_PRESET); setIsZenMode(false); }
                 if (val === 'enzyme') { loadPreset(RESTRICTION_ENZYME_PRESET); setIsZenMode(false); }
                 if (val === 'cloning') { loadPreset(CLONING_PRESET); setIsZenMode(false); }
+                if (val === 'pcr') { loadPreset(PCR_PRESET); setIsZenMode(false); }
+                if (val === 'crispr') { loadPreset(CRISPR_PRESET); setIsZenMode(false); }
+                if (val === 'goldengate') { loadPreset(GOLDEN_GATE_PRESET); setIsZenMode(false); }
                 if (val === 'zen') {
                   loadPreset(ZEN_MODE_PRESET);
                   setIsZenMode(true);
@@ -417,6 +463,9 @@ function App() {
               <option value="dogma">🧬 Central Dogma</option>
               <option value="enzyme">✂️ Restriction</option>
               <option value="cloning">🧪 Cloning</option>
+              <option value="pcr">🌡️ PCR</option>
+              <option value="crispr">✂️ CRISPR</option>
+              <option value="goldengate">Golden Gate Assembly</option>
               <option value="quantum">⚛️ Quantum</option>
               <option value="zen">🧘 Zen Mode</option>
             </select>
@@ -461,6 +510,23 @@ function App() {
                 style={{ display: 'none' }}
               />
             </label>
+
+            <button
+              onClick={handleCompile}
+              style={{
+                padding: '10px 15px',
+                borderRadius: '5px',
+                border: 'none',
+                background: '#e17055',
+                color: 'white',
+                cursor: 'pointer',
+                fontWeight: 'bold',
+                fontFamily: 'Inter, sans-serif'
+              }}
+              title="Compile to HyperCode"
+            >
+              🚀 Compile
+            </button>
 
             {/* Hyperfocus Toggle */}
             <button
@@ -524,6 +590,14 @@ function App() {
         onClose={() => setIsModalOpen(false)}
         code={exportCode}
       />
+
+      {isCompilerOpen && (
+        <CompilerPanel
+          code={compiledCode}
+          simulation={simulationResults}
+          onClose={() => setIsCompilerOpen(false)}
+        />
+      )}
     </div >
   );
 }

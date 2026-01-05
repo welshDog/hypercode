@@ -1,9 +1,19 @@
+# Node
+node_modules/
+dist/
+build/
+.env
+.DS_Store
+coverage/
+.nyc_output/
+
 # Python
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
 .Python
+env/
 build/
 develop-eggs/
 dist/
@@ -16,45 +26,21 @@ parts/
 sdist/
 var/
 wheels/
-pip-wheel-metadata/
-share/python-wheels/
 *.egg-info/
 .installed.cfg
 *.egg
-PIPFILE.lock
-
-# Virtual environments
+.pytest_cache/
+.coverage
+htmlcov/
+.venv/
 venv/
 ENV/
-env/
-.venv/
 
 # IDE
 .vscode/
 .idea/
 *.swp
 *.swo
-*~
-.DS_Store
 
-# Node (for web editor)
-node_modules/
-npm-debug.log
-yarn-error.log
-
-# Build
-.gradle/
-dist/
-build/
-
-# Testing
-.pytest_cache/
-.coverage
-htmlcov/
-
-# Jupyter
-.ipynb_checkpoints/
-
-# Environment
-.env
-.env.local
+# HyperCode Specific
+*.log
