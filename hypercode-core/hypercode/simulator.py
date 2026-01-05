@@ -262,6 +262,7 @@ def simulate_flow(flow_data: Dict[str, Any]) -> Dict[str, Any]:
                     # Assembly Step
                     # Try to chain them
                     final_seq = ""
+                    is_circular = False
                     
                     if len(parts_data) > 0:
                         # Start with first part
@@ -273,8 +274,7 @@ def simulate_flow(flow_data: Dict[str, Any]) -> Dict[str, Any]:
                             # Check compatibility
                             if last_right == curr["left"]:
                                 log.append(f"Ligation: Part {i} ({last_right}) matches Part {i+1} ({curr['left']}). Joining.")
-                                # When joining, do we keep both overhangs?
-                                # Golden gate leaves the overhangs in the final sequence (scarless-ish, but the overhang sequence remains).
+                                # Golden gate leaves the overhangs in the final sequence.
                                 # The cut creates a 4bp overlap. When ligated, they merge.
                                 # So we append curr["seq"][4:] (skip the left overhang as it overlaps)
                                 final_seq += curr["seq"][4:]
@@ -284,7 +284,6 @@ def simulate_flow(flow_data: Dict[str, Any]) -> Dict[str, Any]:
                                 final_seq += "-[GAP]-" + curr["seq"]
 
                         # Check Circularity
-                        is_circular = False
                         if parts_data[-1]["right"] == parts_data[0]["left"]:
                             log.append("Circularization: Final part matches first part. Plasmid closed.")
                             is_circular = True
