@@ -1,5 +1,6 @@
 import sys
 import re
+import os
 
 class Colors:
     HEADER = '\033[95m'
@@ -15,8 +16,12 @@ class Colors:
 def validate_file(filepath):
     print(f"{Colors.HEADER}🔍 Scanning: {filepath}{Colors.ENDC}")
     
-    with open(filepath, 'r', encoding='utf-8') as f:
-        lines = f.readlines()
+    try:
+        with open(filepath, 'r', encoding='utf-8') as f:
+            lines = f.readlines()
+    except Exception as e:
+        print(f"{Colors.FAIL}❌ Error reading file: {e}{Colors.ENDC}")
+        return False
 
     errors = 0
     warnings = 0
@@ -69,10 +74,28 @@ def validate_file(filepath):
         print(f"{Colors.FAIL}❌ Validation Failed. {errors} Errors, {warnings} Warnings.{Colors.ENDC}")
         return False
 
+def validate_path(path):
+    if os.path.isfile(path):
+        return validate_file(path)
+    elif os.path.isdir(path):
+        all_passed = True
+        print(f"{Colors.OKCYAN}📂 Scanning Directory: {path}{Colors.ENDC}")
+        for root, _, files in os.walk(path):
+            for file in files:
+                if file.endswith(".hc"):
+                    full_path = os.path.join(root, file)
+                    if not validate_file(full_path):
+                        all_passed = False
+                    print("-" * 40)
+        return all_passed
+    else:
+        print(f"{Colors.FAIL}❌ Invalid path: {path}{Colors.ENDC}")
+        return False
+
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        print("Usage: python syntax_validator.py <file.hc>")
+        print("Usage: python syntax_validator.py <file_or_directory>")
         sys.exit(1)
     
-    filepath = sys.argv[1]
-    validate_file(filepath)
+    path = sys.argv[1]
+    validate_path(path)
