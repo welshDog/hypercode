@@ -46,14 +46,14 @@ module.exports = {
       // Check for active session
       const activeSession = await Session.findOne({ userId: discordId, status: 'active' });
       if (activeSession) {
-        return interaction.reply({ 
-          content: `⚠️ You're already in a session started at <t:${Math.floor(activeSession.startTime.getTime() / 1000)}:t>! Use \`/hyperfocus stop\` to end it first.`, 
-          ephemeral: true 
+        return interaction.reply({
+          content: `⚠️ You're already in a session started at <t:${Math.floor(activeSession.startTime.getTime() / 1000)}:t>! Use \`/hyperfocus stop\` to end it first.`,
+          ephemeral: true
         });
       }
 
       const sessionType = interaction.options.getString('type');
-      
+
       await Session.create({
         userId: discordId,
         guildId: interaction.guildId,
@@ -75,9 +75,9 @@ module.exports = {
     if (subcommand === 'stop') {
       const activeSession = await Session.findOne({ userId: discordId, status: 'active' });
       if (!activeSession) {
-        return interaction.reply({ 
-          content: `❌ You don't have an active session! Use \`/hyperfocus start\` to begin one.`, 
-          ephemeral: true 
+        return interaction.reply({
+          content: `❌ You don't have an active session! Use \`/hyperfocus start\` to begin one.`,
+          ephemeral: true
         });
       }
 
@@ -88,12 +88,12 @@ module.exports = {
       // Token Calculation Logic (from Research)
       // Base Tokens = Focus Minutes / 25
       const baseTokens = durationMinutes / 25;
-      
-      // Streak Bonus (Simple implementation)
-      const streakBonus = baseTokens * (1 + (user.currentStreak / 30));
-      
+
+      // Streak Multiplier (1 + Streak/30)
+      const streakMultiplier = 1 + (user.currentStreak / 30);
+
       // Total (rounded to 2 decimals)
-      const totalTokens = Math.round((baseTokens + streakBonus) * 100) / 100;
+      const totalTokens = Math.round((baseTokens * streakMultiplier) * 100) / 100;
 
       // Update Session
       activeSession.endTime = endTime;
