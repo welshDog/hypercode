@@ -39,3 +39,11 @@ This is the official Node.js implementation of the BROski Discord Bot, designed 
 
 ## 🔗 Research Alignment
 This codebase aligns with the "BROski Bot Consolidated Research" document, implementing the Phase 1 MVP requirements.
+
+## 🗺️ Phase 2 Roadmap
+Based on the Consolidated Research, the next phase focuses on AI and Blockchain integration:
+
+- [ ] **AI Coach Integration**: Connect `/coach` to GPT-4 for personalized productivity advice.
+- [ ] **Blockchain Layer**: Deploy Solana smart contract for BROski$ token minting.
+- [ ] **Leaderboard System**: Implement Redis-backed real-time leaderboards (`/leaderboard`).
+- [ ] **Web Dashboard**: Create a React frontend for users to view stats and manage wallets.
