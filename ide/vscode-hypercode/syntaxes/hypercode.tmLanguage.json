@@ -1,0 +1,68 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "HyperCode",
+  "patterns": [
+    {
+      "include": "#comments"
+    },
+    {
+      "include": "#keywords"
+    },
+    {
+      "include": "#strings"
+    },
+    {
+      "include": "#support"
+    }
+  ],
+  "repository": {
+    "comments": {
+      "patterns": [
+        {
+          "name": "comment.line.number-sign.hypercode",
+          "match": "#.*$"
+        }
+      ]
+    },
+    "keywords": {
+      "patterns": [
+        {
+          "name": "keyword.control.hypercode",
+          "match": "\\b(if|else|return|while|for)\\b"
+        },
+        {
+          "name": "keyword.other.hypercode",
+          "match": "@(function|circuit|entry|init|measure|hadamard|cnot|x|z|y)"
+        },
+        {
+          "name": "keyword.control.directive.hypercode",
+          "match": "^#:domain"
+        }
+      ]
+    },
+    "strings": {
+      "name": "string.quoted.double.hypercode",
+      "begin": "\"",
+      "end": "\"",
+      "patterns": [
+        {
+          "name": "constant.character.escape.hypercode",
+          "match": "\\\\."
+        }
+      ]
+    },
+    "support": {
+      "patterns": [
+        {
+          "name": "support.type.hypercode",
+          "match": "\\b(Int|String|QReg|CReg|Qubit|Bit|Void)\\b"
+        },
+        {
+          "name": "support.function.hypercode",
+          "match": "\\b(print|measure)\\b"
+        }
+      ]
+    }
+  },
+  "scopeName": "source.hypercode"
+}

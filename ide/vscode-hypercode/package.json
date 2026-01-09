@@ -1,0 +1,25 @@
+{
+  "name": "hypercode",
+  "displayName": "HyperCode",
+  "description": "Language support for HyperCode - The Neurodivergent-First Quantum Language",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.75.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "contributes": {
+    "languages": [{
+      "id": "hypercode",
+      "aliases": ["HyperCode", "hypercode"],
+      "extensions": [".hc"],
+      "configuration": "./language-configuration.json"
+    }],
+    "grammars": [{
+      "language": "hypercode",
+      "scopeName": "source.hypercode",
+      "path": "./syntaxes/hypercode.tmLanguage.json"
+    }]
+  }
+}
