@@ -1,16 +1,20 @@
 # FizzBuzz in HyperCode (conceptual example)
 # This is a placeholder showing what the syntax might look like
 
-function fizzbuzz(n: int) -> None:
-    for i in 1..n:
-        if i % 15 == 0:
-            print("FizzBuzz")
-        elif i % 3 == 0:
-            print("Fizz")
-        elif i % 5 == 0:
-            print("Buzz")
-        else:
-            print(i)
+#:domain classical
 
-# Example usage
-fizzbuzz(100)
+@function: fizzbuzz (n: Int) -> Void
+    @doc: "Classic FizzBuzz interview question, HyperCode style"
+    
+    @for: i in range(1, n + 1)
+        @if: i % 15 == 0
+            @print: "FizzBuzz"
+        @elif: i % 3 == 0
+            @print: "Fizz"
+        @elif: i % 5 == 0
+            @print: "Buzz"
+        @else:
+            @print: i
+
+@function: main ()
+    @run: fizzbuzz(100)

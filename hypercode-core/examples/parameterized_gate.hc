@@ -1,9 +1,16 @@
-@data PI: 3.14159265359
+#:domain quantum
 
-@quantum Rotate qubits 1
+@let: PI = 3.14159265359
+
+@circuit: rotate_circuit
+    @doc: "Demonstrates parameterized quantum gates"
+    @init: q = QReg(1)
+    @init: c = CReg(1)
+    
     # Rotate Qubit 0 by PI/2 around the X axis
-    RX(PI/2) q0
-    MEASURE q0 -> c0
-@end
+    @rx(PI/2): q[0]
+    
+    @measure: q[0] -> c[0]
 
-@print("Rotation Complete")
+@function: main()
+    @print: "Rotation Complete"

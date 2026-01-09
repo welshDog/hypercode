@@ -7,8 +7,8 @@
   @param: marked < n
   
   @circuit: c
-    @init: qubits = QuantumRegister(n)
-    @init: result = ClassicalRegister(n)
+    @init: qubits = QReg(n)
+    @init: result = CReg(n)
     
     # Initialize superposition
     @for: i in range(n)

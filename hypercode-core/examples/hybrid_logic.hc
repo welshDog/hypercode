@@ -1,15 +1,19 @@
-@data threshold: 0.5
-@data val: 0.8
+#:domain quantum
 
-@print("Starting Hybrid Logic Check")
+@let: threshold = 0.5
+@let: val = 0.8
 
-@check (val > threshold) -> {
-    @print("Value exceeds threshold, running quantum circuit...")
+@function: main()
+    @print: "Starting Hybrid Logic Check"
     
-    @quantum CircuitA qubits 1
-        X q0
-        MEASURE q0 -> res
-    @end
-}
-
-@print("Done")
+    @if: val > threshold
+        @print: "Value exceeds threshold, running quantum circuit..."
+        
+        @circuit: circuit_a
+            @init: q = QReg(1)
+            @init: c = CReg(1)
+            
+            @x: q[0]
+            @measure: q[0] -> c[0]
+            
+    @print: "Done"
