@@ -1,0 +1,23 @@
+{
+  "name": "broski-discord-bot",
+  "version": "1.0.0",
+  "description": "ADHD-powered Discord automation and gamification engine for HyperCode",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js",
+    "lint": "eslint src/**/*.js"
+  },
+  "dependencies": {
+    "discord.js": "^14.14.1",
+    "dotenv": "^16.3.1",
+    "mongoose": "^8.0.3",
+    "redis": "^4.6.12"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2",
+    "eslint": "^8.56.0"
+  },
+  "author": "Lyndz Williams (welshDog)",
+  "license": "MIT"
+}
