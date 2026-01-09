@@ -8,21 +8,13 @@ This is the official Node.js implementation of the BROski Discord Bot, designed 
 - **Database**: MongoDB (Mongoose)
 - **Caching**: Redis (Planned)
 
-## 🚀 Setup
+## 🚀 Deployment
+For a complete step-by-step guide on how to deploy this bot to a live server (or your local machine), read [DEPLOYMENT.md](DEPLOYMENT.md).
 
-1.  **Install Dependencies**:
-    ```bash
-    npm install
-    ```
-
-2.  **Configuration**:
-    - Copy `.env.example` to `.env`
-    - Fill in your `DISCORD_TOKEN`, `CLIENT_ID`, and `MONGODB_URI`.
-
-3.  **Run Development**:
-    ```bash
-    npm run dev
-    ```
+Quick Start (Windows):
+```bash
+start.bat
+```
 
 ## 📂 Structure
 - `src/index.js`: Main entry point. Connects to Mongo and Discord.
@@ -43,7 +35,7 @@ This codebase aligns with the "BROski Bot Consolidated Research" document, imple
 ## 🗺️ Phase 2 Roadmap
 Based on the Consolidated Research, the next phase focuses on AI and Blockchain integration:
 
-- [ ] **AI Coach Integration**: Connect `/coach` to GPT-4 for personalized productivity advice.
+- [x] **AI Coach Integration**: Connect `/coach` to GPT-4 for personalized productivity advice.
 - [ ] **Blockchain Layer**: Deploy Solana smart contract for BROski$ token minting.
-- [ ] **Leaderboard System**: Implement Redis-backed real-time leaderboards (`/leaderboard`).
+- [x] **Leaderboard System**: Implement Redis-backed real-time leaderboards (`/leaderboard`).
 - [ ] **Web Dashboard**: Create a React frontend for users to view stats and manage wallets.
