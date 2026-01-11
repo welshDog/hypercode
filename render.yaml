@@ -3,9 +3,8 @@ services:
   - type: web
     name: hypercode-bot
     env: node
-    root: tools/discord-bot
-    buildCommand: npm install
-    startCommand: npm start
+    buildCommand: cd tools/discord-bot && npm install
+    startCommand: cd tools/discord-bot && npm start
     envVars:
       - key: NODE_VERSION
         value: 18.17.0
@@ -20,9 +19,8 @@ services:
   - type: web
     name: hypercode-dashboard
     env: static
-    root: web/dashboard
-    buildCommand: npm install && npm run build
-    staticPublishPath: dist
+    buildCommand: cd web/dashboard && npm install && npm run build
+    staticPublishPath: web/dashboard/dist
     routes:
       - type: rewrite
         source: /*
