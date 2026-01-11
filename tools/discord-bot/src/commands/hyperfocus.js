@@ -1,6 +1,7 @@
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const User = require('../models/User');
 const Session = require('../models/Session');
+const aiCoach = require('../utils/aiCoach');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -139,6 +140,13 @@ module.exports = {
         if (user.totalFocusTime) user.totalFocusTime += durationMinutes;
         if (user.sessionCount) user.sessionCount += 1;
         await user.save();
+
+        // 🧠 AI MEMORY SAVE
+        await aiCoach.saveMemory(
+          discordId,
+          'SessionSummary',
+          `Completed a ${durationMinutes} min ${activeSession.sessionType} session. Earned ${totalTokens} tokens.`
+        );
       }
 
       const embed = new EmbedBuilder()

@@ -6,6 +6,8 @@
   "scripts": {
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
+    "seed": "node src/utils/seedShop.js",
+    "test": "jest",
     "lint": "eslint src/**/*.js"
   },
   "dependencies": {
@@ -20,7 +22,10 @@
   },
   "devDependencies": {
     "eslint": "^8.56.0",
-    "nodemon": "^3.0.2"
+    "jest": "^30.2.0",
+    "mongodb-memory-server": "^11.0.1",
+    "nodemon": "^3.0.2",
+    "supertest": "^7.2.2"
   },
   "author": "Lyndz Williams (welshDog)",
   "license": "MIT"

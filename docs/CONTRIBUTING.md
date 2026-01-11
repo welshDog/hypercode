@@ -1,64 +1,64 @@
-# 🤝 CONTRIBUTING TO HYPERCODE
+# 📘 Contributing to HyperCode
 
-## We Need You!
+Welcome to the Agency. This document is the "Source of Truth" for how we build.
 
-HyperCode is a **neurodivergent-first language** built BY and FOR neurodivergent minds.
+## 🛠️ Development Setup
 
-### Ways to Help
+### Prerequisites
+- Node.js v16+
+- MongoDB (Local or Atlas)
+- Discord Bot Token
 
-1. **Design Feedback**
-   - Does the syntax make sense to YOUR brain?
-   - What would make it better?
-   - File an issue or join discussions
+### Quick Start
+1. **Clone & Install**
+   ```bash
+   git clone <repo>
+   cd tools/discord-bot && npm install
+   cd ../../web/dashboard && npm install
+   ```
 
-2. **Parser Implementation**
-   - Help build the textual frontend (ANTLR or langcc)
-   - Write lexer/parser, AST builder
+2. **Environment Variables**
+   - Copy `.env.example` to `.env` in `tools/discord-bot`.
+   - Set `DISCORD_TOKEN` and `MONGODB_URI`.
 
-3. **IR Builder**
-   - Map AST → HyperCode IR
-   - Implement optimization passes
-
-4. **Backends**
-   - Connect to Qiskit, LLVM, DSD
-   - Code generation
-
-5. **Visual Editor**
-   - Build web-based node interface (React)
-   - Implement drag-drop, data flow visualization
-
-6. **Testing**
-   - Test with real quantum hardware
-   - Report bugs, edge cases
-
-7. **Documentation**
-   - Make docs clearer
-   - Write tutorials
-
-8. **Community**
-   - Spread the word
-   - Recruit co-builders
-
-### Getting Started
-
-1. Fork the repo
-2. Create a branch: `git checkout -b feature/your-feature`
-3. Make changes
-4. Run tests: `pytest tests/`
-5. Commit: `git commit -m "Add feature"`
-6. Push: `git push origin feature/your-feature`
-7. Open a PR with description
-
-### Code Style
-
-- Python: PEP 8 (use `black` and `flake8`)
-- JavaScript: Prettier + ESLint
-- Comments: Explain the WHY, not the WHAT
-
-### Questions?
-
-File an issue or start a discussion. No question is dumb.
+3. **Run the Stack**
+   - **Bot**: `cd tools/discord-bot && npm run dev`
+   - **Dashboard**: `cd web/dashboard && npm run dev`
 
 ---
 
-**Let's build this together.** 🙏❤️
+## 🧪 Testing (The Vanguard Protocol)
+Before pushing code, you MUST run the test suite.
+
+```bash
+cd tools/discord-bot
+npm test
+```
+
+If tests fail, do not merge.
+
+---
+
+## 🧩 Adding Features
+
+### Adding a Discord Command
+1. Create file in `src/commands/<name>.js`.
+2. Use `SlashCommandBuilder`.
+3. Implement `execute(interaction)`.
+4. **Neuro-Tip**: Keep responses concise and use emojis.
+
+### Adding a Dashboard Widget
+1. Create component in `src/components/`.
+2. Use `framer-motion` for entrance animations.
+3. Ensure high contrast (WCAG AA).
+
+---
+
+## 📝 Style Guide (Neurodivergent-First)
+- **Comments**: Explain *Why*, not just *What*.
+- **Variable Names**: Descriptive > Short. `isDatabaseConnected` > `dbConn`.
+- **Functions**: Small, single-purpose functions. Avoid "God Objects".
+
+---
+
+*Maintained by The Archivist*

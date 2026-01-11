@@ -9,6 +9,8 @@ const axios = require('axios'); // For OAuth
 const { URLSearchParams } = require('url');
 
 const User = require('./models/User'); // Import User model for API
+const Streak = require('./models/Streak'); // Import Streak model for API
+const Session = require('./models/Session'); // Import Session model for API
 
 // Initialize Client
 const client = new Client({
@@ -23,8 +25,48 @@ const client = new Client({
 const app = express();
 const PORT = process.env.API_PORT || 3000;
 
-app.use(cors());
+app.use(cors({
+  origin: process.env.FRONTEND_URL ? [process.env.FRONTEND_URL, 'http://localhost:5173'] : '*',
+  methods: ['GET', 'POST']
+}));
 app.use(express.json());
+
+const aiCoach = require('./utils/aiCoach');
+
+// ... (Existing Imports)
+
+// 🧠 NEW: AI Coach Advice Endpoint
+app.get('/api/coach/advice/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    // Fetch context (Reuse logic from coach command roughly)
+    const user = await User.findOne({ discordId: userId }) || { currentStreak: 0, totalFocusTime: 0 };
+
+    // Check active session
+    const activeSession = await Session.findOne({ userId, status: 'active' });
+
+    const context = {
+      userId,
+      username: user.username || 'Warrior',
+      currentStreak: user.currentStreak,
+      totalFocusTime: user.totalFocusTime,
+      isSessionActive: !!activeSession,
+    };
+
+    if (activeSession) {
+      const durationMs = Date.now() - activeSession.startTime;
+      context.sessionDuration = durationMs / 60000;
+    }
+
+    const advice = await aiCoach.getAdvice(context);
+    res.json({ advice });
+
+  } catch (error) {
+    console.error('API Advice Error:', error);
+    res.status(500).json({ error: 'Failed to get advice' });
+  }
+});
 
 // API Endpoints
 app.get('/api/stats/:userId', async (req, res) => {
@@ -47,16 +89,26 @@ app.get('/api/stats/:userId', async (req, res) => {
 
     // Calculate global rank
     let rank = 1;
+    let streakHistory = [];
     if (mongoose.connection.readyState === 1) {
       const allUsers = await User.find().sort({ broskiBalance: -1 });
       rank = allUsers.findIndex(u => u.discordId === req.params.userId) + 1;
+
+      // Fetch Streak History (Last 30 days)
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      streakHistory = await Streak.find({
+        userId: req.params.userId,
+        date: { $gte: thirtyDaysAgo }
+      }).select('date activityCount -_id');
     }
 
     res.json({
       balance: user.broskiBalance,
       streak: user.currentStreak,
       rank: rank,
-      totalEarned: user.totalEarned
+      totalEarned: user.totalEarned,
+      history: streakHistory
     });
   } catch (err) {
     console.error("API Error:", err);
@@ -224,11 +276,20 @@ client.once('ready', async () => {
 });
 
 client.on('interactionCreate', async interaction => {
-  if (!interaction.isChatInputCommand()) return;
-
   const command = client.commands.get(interaction.commandName);
-
   if (!command) return;
+
+  // Handle Autocomplete
+  if (interaction.isAutocomplete()) {
+    try {
+      await command.autocomplete(interaction);
+    } catch (error) {
+      console.error('Autocomplete Error:', error);
+    }
+    return;
+  }
+
+  if (!interaction.isChatInputCommand()) return;
 
   try {
     await command.execute(interaction);

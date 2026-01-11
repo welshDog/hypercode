@@ -34,6 +34,7 @@ module.exports = {
     const activeSession = await Session.findOne({ userId: discordId, status: 'active' });
 
     let context = {
+        userId: discordId, // Critical for AI Memory
         username: interaction.user.username,
         currentStreak: user.currentStreak,
         totalFocusTime: user.totalFocusTime,
