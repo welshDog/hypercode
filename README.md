@@ -36,6 +36,27 @@ Welcome to the HyperCode project monorepo.
 - **Implemented**: High-contrast maps, spatial node layouts, clear tooltips.
 - **Implemented**: Dyslexia Mode (Shift + D), Reduced Visual Noise (Zen Mode).
 
+## V3 Syntax Preview (Hello World)
+HyperCode V3 uses explicit, readable decorators to reduce cognitive load.
+
+**Quantum Bell Pair (`hello_world.hc`):**
+```hypercode
+#:domain quantum
+
+@circuit: main
+    # 1. Initialize Registers (Explicit & Clear)
+    @init: q = QReg(2)
+    @init: c = CReg(2)
+
+    # 2. Apply Gates (Linear Flow)
+    @hadamard: q[0]
+    @cnot: q[0], q[1]
+
+    # 3. Measure
+    @measure: q[0] -> c[0]
+    @measure: q[1] -> c[1]
+```
+
 ## Getting Started
 
 ### HyperFlow Editor

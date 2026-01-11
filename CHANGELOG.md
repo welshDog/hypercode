@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] - 2026-01-11
+
+### Added
+- **V3 Syntax Engine**:
+  - Full support for V3 syntax (`@circuit`, `@init`, `@gate`).
+  - Strict type checking in Parser and Compiler.
+  - Neurodivergent-friendly explicit register declarations (`QReg`, `CReg`).
+- **Core Pipeline**:
+  - **Parser**: Rewritten for strict V3 compliance.
+  - **Compiler**: Now auto-detects domains (`#:domain quantum` vs `molecular`).
+  - **Evaluator**: Full QIR lowering and execution support.
+- **Integration**:
+  - Green integration tests for the full HyperFlow -> Compiler -> Execution loop.
+
 ## [0.2.0-alpha] - 2026-01-05
 
 ### Added
