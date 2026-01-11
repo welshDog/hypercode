@@ -31,20 +31,39 @@ module.exports = {
   async execute(interaction) {
     const subcommand = interaction.options.getSubcommand();
     const discordId = interaction.user.id;
+    const mongoose = require('mongoose');
 
-    // Ensure user exists
-    let user = await User.findOne({ discordId });
-    if (!user) {
-      user = await User.create({
+    // MOCK MODE CHECK
+    const isDBConnected = mongoose.connection.readyState === 1;
+
+    // Ensure user exists (Mock or Real)
+    let user;
+    if (isDBConnected) {
+      user = await User.findOne({ discordId });
+      if (!user) {
+        user = await User.create({
+          discordId,
+          username: interaction.user.username,
+          roles: ['Warrior']
+        });
+      }
+    } else {
+      // Mock User
+      user = {
         discordId,
         username: interaction.user.username,
-        roles: ['Warrior']
-      });
+        currentStreak: 5, // Mock streak
+        broskiBalance: 150
+      };
     }
 
     if (subcommand === 'start') {
       // Check for active session
-      const activeSession = await Session.findOne({ userId: discordId, status: 'active' });
+      let activeSession = null;
+      if (isDBConnected) {
+        activeSession = await Session.findOne({ userId: discordId, status: 'active' });
+      }
+
       if (activeSession) {
         return interaction.reply({
           content: `⚠️ You're already in a session started at <t:${Math.floor(activeSession.startTime.getTime() / 1000)}:t>! Use \`/hyperfocus stop\` to end it first.`,
@@ -54,26 +73,38 @@ module.exports = {
 
       const sessionType = interaction.options.getString('type');
 
-      await Session.create({
-        userId: discordId,
-        guildId: interaction.guildId,
-        startTime: new Date(),
-        sessionType,
-        status: 'active'
-      });
+      if (isDBConnected) {
+        await Session.create({
+          userId: discordId,
+          guildId: interaction.guildId,
+          startTime: new Date(),
+          sessionType,
+          status: 'active'
+        });
+      }
 
       const embed = new EmbedBuilder()
         .setColor('#00ff00')
         .setTitle('🚀 Hyperfocus Mode Activated')
         .setDescription(`**Focus Target:** ${sessionType}\n\nGood luck, ${interaction.user.username}! I'll track your time and GitHub commits.`)
         .addFields({ name: 'Started At', value: `<t:${Math.floor(Date.now() / 1000)}:t>` })
-        .setFooter({ text: 'Stay hydrated! 💧' });
+        .setFooter({ text: isDBConnected ? 'Stay hydrated! 💧' : 'Stay hydrated! 💧 (Offline Mode)' });
 
       return interaction.reply({ embeds: [embed] });
     }
 
     if (subcommand === 'stop') {
-      const activeSession = await Session.findOne({ userId: discordId, status: 'active' });
+      let activeSession = null;
+      if (isDBConnected) {
+        activeSession = await Session.findOne({ userId: discordId, status: 'active' });
+      } else {
+        // Mock active session for testing
+        activeSession = {
+          startTime: new Date(Date.now() - 25 * 60000), // Started 25 mins ago
+          sessionType: 'Mock Session'
+        };
+      }
+
       if (!activeSession) {
         return interaction.reply({
           content: `❌ You don't have an active session! Use \`/hyperfocus start\` to begin one.`,
@@ -96,18 +127,19 @@ module.exports = {
       const totalTokens = Math.round((baseTokens * streakMultiplier) * 100) / 100;
 
       // Update Session
-      activeSession.endTime = endTime;
-      activeSession.focusMinutes = durationMinutes;
-      activeSession.earnedTokens = totalTokens;
-      activeSession.status = 'completed';
-      await activeSession.save();
+      if (isDBConnected) {
+        activeSession.endTime = endTime;
+        activeSession.focusMinutes = durationMinutes;
+        activeSession.tokensEarned = totalTokens;
+        activeSession.status = 'completed';
+        await activeSession.save();
 
-      // Update User
-      user.broskiBalance += totalTokens;
-      user.totalEarned += totalTokens;
-      user.totalFocusTime += durationMinutes;
-      user.sessionCount += 1;
-      await user.save();
+        user.broskiBalance += totalTokens;
+        user.totalEarned += totalTokens;
+        if (user.totalFocusTime) user.totalFocusTime += durationMinutes;
+        if (user.sessionCount) user.sessionCount += 1;
+        await user.save();
+      }
 
       const embed = new EmbedBuilder()
         .setColor('#ffcc00')
@@ -117,7 +149,8 @@ module.exports = {
           { name: '⏱️ Duration', value: `${durationMinutes} minutes`, inline: true },
           { name: '💰 Earned', value: `${totalTokens} BROski$`, inline: true },
           { name: '🔥 Streak', value: `${user.currentStreak} days`, inline: true }
-        );
+        )
+        .setFooter({ text: isDBConnected ? 'Session Saved' : 'Session Completed (Offline Mode - Not Saved)' });
 
       return interaction.reply({ embeds: [embed] });
     }
