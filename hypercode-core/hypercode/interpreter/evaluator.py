@@ -5,7 +5,7 @@ This module provides the core evaluation logic for the HyperCode language,
 including quantum circuit execution and classical program evaluation.
 """
 
-from typing import Dict, Any, Optional, Union, List, cast
+from typing import Dict, Any, Optional, Union, List
 
 from hypercode.ast.nodes import (
     Program, Statement, DataDecl, SetStmt, PrintStmt, CheckStmt, Block,

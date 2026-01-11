@@ -64,11 +64,11 @@ def test_compiler_to_evaluator():
         print(f"⚠️ Evaluator Warning (might be backend issue): {e}")
         # If it's just missing Qiskit, that's fine for now, we want to test the Pipeline logic (Lowering)
         if "Qiskit" in str(e) or "backend" in str(e).lower():
-             print("Evaluator logic seems fine, backend failed as expected in this env.")
+            print("Evaluator logic seems fine, backend failed as expected in this env.")
         else:
-             print("❌ Evaluator Logic Error")
-             import traceback
-             traceback.print_exc()
+            print("❌ Evaluator Logic Error")
+            import traceback
+            traceback.print_exc()
 
 if __name__ == "__main__":
     test_compiler_to_evaluator()

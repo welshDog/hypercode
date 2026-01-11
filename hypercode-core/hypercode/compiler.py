@@ -155,7 +155,7 @@ def _sanitize_name(label: str) -> str:
     """Converts a label into a valid variable name."""
     return label.lower().replace(" ", "_").replace("-", "_").replace("+", "_").replace("(", "").replace(")", "")
 
-def _find_input_var(node_id: str, edges: List[Dict], id_to_var: Dict) -> str:
+def _find_input_var(node_id: str, edges: List[Dict], id_to_var: Dict[str, str]) -> str:
     """Finds the variable name of the node connected to the input of this node."""
     for edge in edges:
         if edge["target"] == node_id:
@@ -163,7 +163,7 @@ def _find_input_var(node_id: str, edges: List[Dict], id_to_var: Dict) -> str:
             return id_to_var.get(source_id, "unknown_source")
     return "null"
 
-def _find_input_vars(node_id: str, edges: List[Dict], id_to_var: Dict) -> List[str]:
+def _find_input_vars(node_id: str, edges: List[Dict], id_to_var: Dict[str, str]) -> List[str]:
     """Finds all variable names connected to the input of this node."""
     input_vars = []
     # Find edges targeting this node

@@ -1,8 +1,8 @@
 import re
-from typing import List, Optional, Tuple, Set, Union
+from typing import List, Optional
 from hypercode.ast.nodes import (
-    Program, Statement, DataDecl, SetStmt, PrintStmt, CheckStmt, Block,
-    Expr, Literal, Variable, BinaryOp,
+    Program, Statement,
+    Expr, Literal, Variable,
     QGate, QMeasure, QuantumCircuitDecl, Directive, QRegDecl, QubitRef
 )
 
@@ -133,7 +133,7 @@ class Parser:
         
         curr = self.current()
         if curr and curr.type == 'COLON': # Handle optional colon
-             self.consume('COLON')
+            self.consume('COLON')
              
         value = self.consume('IDENTIFIER').value
         return Directive(kind=kind, value=value)
