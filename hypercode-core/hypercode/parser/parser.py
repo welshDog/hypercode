@@ -2,8 +2,10 @@ import re
 from typing import List, Optional
 from hypercode.ast.nodes import (
     Program, Statement,
-    Expr, Literal, Variable,
-    QGate, QMeasure, QuantumCircuitDecl, Directive, QRegDecl, QubitRef
+    Expr, Literal, Variable, BinaryOp,
+    DataDecl, SetStmt, PrintStmt, CheckStmt, Block,
+    QGate, QMeasure, QuantumCircuitDecl, Directive, QRegDecl, QubitRef,
+    CrisprEdit, PcrReaction, QuantumCrispr
 )
 
 class Token:
@@ -164,6 +166,12 @@ class Parser:
         return QuantumCircuitDecl(name=name, body=body)
 
     def parse_statement(self) -> Optional[Statement]:
+        """
+        Parse a single statement from the token stream.
+        
+        Returns:
+            A Statement node or None if the statement is a directive or comment.
+        """
         token = self.current()
         if not token: return None
         
@@ -178,6 +186,20 @@ class Parser:
                 return self.parse_init()
             elif cmd == '@measure':
                 return self.parse_measure()
+            elif cmd == '@data':
+                return self.parse_data()
+            elif cmd == '@set':
+                return self.parse_set()
+            elif cmd == '@print':
+                return self.parse_print()
+            elif cmd == '@check':
+                return self.parse_check()
+            elif cmd == '@crispr':
+                return self.parse_crispr()
+            elif cmd == '@pcr':
+                return self.parse_pcr()
+            elif cmd == '@quantum_crispr':
+                return self.parse_quantum_crispr()
             else:
                 return self.parse_gate()
         
@@ -185,8 +207,58 @@ class Parser:
         self.pos += 1
         return None
 
+    def parse_data(self) -> DataDecl:
+        """Parse a data declaration: @data name: value"""
+        # @data x: 42
+        self.consume('AT_CMD') # @data
+        name = self.consume('IDENTIFIER').value
+        self.consume('COLON')
+        val = self.parse_expr()
+        return DataDecl(name=name, value=val)
+
+    def parse_set(self) -> SetStmt:
+        """Parse a variable assignment: @set name: expr"""
+        # @set x: x + 1
+        self.consume('AT_CMD') # @set
+        name = self.consume('IDENTIFIER').value
+        self.consume('COLON')
+        expr = self.parse_expr()
+        return SetStmt(name=name, value=expr)
+
+    def parse_print(self) -> PrintStmt:
+        """Parse a print statement: @print(expr)"""
+        # @print(x)
+        self.consume('AT_CMD') # @print
+        self.consume('LPAREN')
+        expr = self.parse_expr()
+        self.consume('RPAREN')
+        return PrintStmt(expr=expr)
+
+    def parse_check(self) -> CheckStmt:
+        """Parse a conditional check: @check(expr) -> { body }"""
+        # @check(x > 5) -> { ... }
+        self.consume('AT_CMD') # @check
+        self.consume('LPAREN')
+        
+        condition = self.parse_expr()
+        
+        self.consume('RPAREN')
+        self.consume('ARROW')
+        self.consume('LBRACE')
+        
+        body: List[Statement] = []
+        while self.current() and self.current().type != 'RBRACE':
+            stmt = self.parse_statement()
+            if stmt:
+                body.append(stmt)
+        
+        self.consume('RBRACE')
+        return CheckStmt(condition=condition, true_block=Block(statements=body))
+
     def parse_init(self) -> QRegDecl:
+        """Parse a register initialization: @init: name = QReg(size)"""
         self.consume('AT_CMD') # @init
+
         self.consume('COLON')
         name = self.consume('IDENTIFIER').value
         self.consume('ASSIGN')
@@ -254,8 +326,123 @@ class Parser:
             
         return QubitRef(register=name, index=index)
 
+    def parse_crispr(self) -> CrisprEdit:
+        # @crispr: target, "guide", "pam"
+        self.consume('AT_CMD')
+        self.consume('COLON')
+        target = self.consume('IDENTIFIER').value
+        self.consume('COMMA')
+        guide_token = self.consume('STRING')
+        guide = guide_token.value.strip('"').strip("'")
+        
+        pam = "NGG"
+        if self.current() and self.current().type == 'COMMA':
+            self.consume('COMMA')
+            pam_token = self.consume('STRING')
+            pam = pam_token.value.strip('"').strip("'")
+            
+        return CrisprEdit(target=target, guide=guide, pam=pam)
+
+    def parse_pcr(self) -> PcrReaction:
+        # @pcr: template, "fwd", "rev"
+        self.consume('AT_CMD')
+        self.consume('COLON')
+        template = self.consume('IDENTIFIER').value
+        self.consume('COMMA')
+        fwd = self.consume('STRING').value.strip('"').strip("'")
+        self.consume('COMMA')
+        rev = self.consume('STRING').value.strip('"').strip("'")
+        
+        return PcrReaction(template=template, fwd_primer=fwd, rev_primer=rev)
+
+    def parse_quantum_crispr(self) -> QuantumCrispr:
+        # @quantum_crispr
+        #     target = "X"
+        #     genome = "Y"
+        #     num_guides = 3
+        #     result -> var
+        self.consume('AT_CMD')
+        
+        # Optional colon
+        if self.current() and self.current().type == 'COLON':
+            self.consume('COLON')
+            
+        target = ""
+        genome = ""
+        num_guides = 1
+        result_var = "result"
+        
+        while self.current():
+            token = self.current()
+            if not token:
+                break
+            
+            # Stop if we hit start of next command or directive
+            if token.type in ['AT_CMD', 'DIRECTIVE']:
+                break
+                
+            if token.type == 'IDENTIFIER':
+                key = token.value
+                
+                # Check for "result -> var"
+                if key == 'result':
+                    self.consume('IDENTIFIER') # consume 'result'
+                    if self.current() and self.current().type == 'ARROW':
+                        self.consume('ARROW')
+                        result_var = self.consume('IDENTIFIER').value
+                        continue
+                
+                # Check for "key = value"
+                next_token = self.peek()
+                if next_token and next_token.type == 'ASSIGN':
+                    self.consume('IDENTIFIER') # consume key
+                    self.consume('ASSIGN')
+                    
+                    curr = self.current()
+                    if not curr:
+                        break
+                    
+                    val_token = self.consume(curr.type) # Consume value
+                    raw_val = val_token.value
+                    
+                    if val_token.type == 'STRING':
+                        val = raw_val.strip('"').strip("'")
+                    elif val_token.type == 'NUMBER':
+                        val = raw_val
+                    else:
+                         val = raw_val # fallback
+                    
+                    if key == 'target':
+                        target = str(val)
+                    elif key == 'genome':
+                        genome = str(val)
+                    elif key == 'num_guides':
+                        num_guides = int(float(val))
+                    continue
+            
+            # If we are here, we didn't match a pattern, so we might be done or syntax error
+            # For robustness, break
+            break
+            
+        return QuantumCrispr(target=target, genome=genome, num_guides=num_guides, result_var=result_var)
+
     def parse_expr(self) -> Expr:
-        # Simple expression parser
+        # Simple recursive descent for expressions
+        left = self.parse_term()
+        
+        curr = self.current()
+        if curr and curr.type == 'OP':
+            op = self.consume('OP').value
+            right = self.parse_expr()
+            return BinaryOp(left=left, op=op, right=right)
+        
+        return left
+
+    def parse_term(self) -> Expr:
+        """
+        Parse a single term in an expression.
+        Terms are either numbers, identifiers, strings, or parenthesized expressions.
+        """
         token = self.current()
         if not token:
              raise SyntaxError("Unexpected EOF in expr")
@@ -265,20 +452,18 @@ class Parser:
             self.consume('NUMBER')
             return Literal(value=val)
         elif token.type == 'IDENTIFIER':
-            # Could be variable or constant like PI
             name = self.consume('IDENTIFIER').value
-            curr = self.current()
-            if curr and curr.type == 'OP' and curr.value == '/':
-                 # Handle PI/2 roughly
-                 self.consume('OP')
-                 denom_token = self.consume('NUMBER')
-                 denom = float(denom_token.value)
-                 # Assume name was PI or something
-                 return Literal(value=3.14159/denom)
             return Variable(name=name)
         elif token.type == 'STRING':
              val = self.consume('STRING').value
+             if (val.startswith('"') and val.endswith('"')) or (val.startswith("'") and val.endswith("'")):
+                 val = val[1:-1]
              return Literal(value=val)
+        elif token.type == 'LPAREN':
+            self.consume('LPAREN')
+            expr = self.parse_expr()
+            self.consume('RPAREN')
+            return expr
         
         raise SyntaxError(f"Unexpected token in expr: {token}")
 
@@ -287,3 +472,14 @@ def parse(text: str) -> Program:
     tokens = lexer.tokenize()
     parser = Parser(tokens)
     return parser.parse()
+
+class HyperCodeParser:
+    """
+    High-level parser wrapper that handles tokenization and parsing.
+    This class is the main entry point for external consumers.
+    """
+    def __init__(self, code: str):
+        self.code = code
+    
+    def parse(self) -> Program:
+        return parse(self.code)

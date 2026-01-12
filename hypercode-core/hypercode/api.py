@@ -6,6 +6,7 @@ from typing import Optional
 
 from hypercode.parser.parser import parse
 from hypercode.interpreter.evaluator import Evaluator
+from hypercode.ir.type_checker import TypeChecker
 from hypercode.results import ExecutionResult
 
 
@@ -33,7 +34,16 @@ def execute(
         # 1. Parse the source code into an AST
         program_ast = parse(code_string)
 
-        # 2. Set up and run the evaluator
+        # 2. Type Check
+        type_checker = TypeChecker()
+        type_errors = type_checker.check_program(program_ast)
+        
+        if type_errors:
+            # For now, just raise the first error as an exception
+            # In the future, we might want to return multiple errors in the result
+            raise Exception(f"Type checking failed:\n{type_checker.report()}")
+
+        # 3. Set up and run the evaluator
         evaluator = Evaluator(
             backend_name=backend_name,
             shots=shots,

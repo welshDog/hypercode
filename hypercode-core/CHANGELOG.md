@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0] - 2026-01-12
+
+### Added
+- **Biological Domain Support (HELIX MVP)**:
+  - New `molecular` backend for simulating biological operations.
+  - `@crispr` directive: Simulate CRISPR/Cas9 editing with PAM detection and NHEJ repair.
+  - `@pcr` directive: Simulate Polymerase Chain Reaction with primer binding and Tm calculation.
+  - `docs/bio_guide.md`: Comprehensive guide for using the new bio-features.
+  - `examples/bio/`: Ready-to-run examples for CRISPR knockout and PCR amplification.
+- **Compiler Enhancements**:
+  - `compile_to_v3` now supports bio-nodes (`CrisprEdit`, `PcrReaction`), enabling future visual editor integration.
+- **Testing**:
+  - Achieved 93% test coverage for the `crispr_engine`.
+  - Full integration tests for bio-workflows.
+
 ## [0.1.0] - 2025-12-30
 
 ### Added

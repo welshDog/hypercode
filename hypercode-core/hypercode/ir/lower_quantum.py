@@ -48,8 +48,17 @@ class QuantumLowerer:
                     idx = self._resolve_qubit(qref, reg_map)
                     resolved_qubits.append(idx)
                 
+                # Resolve gate name
+                gate_name = stmt.name.lower()
+                if gate_name == 'hadamard':
+                    gate_name = 'h'
+                elif gate_name == 'cnot':
+                    gate_name = 'cx'
+                elif gate_name == 'phase':
+                    gate_name = 'p' # Or rz? Phase usually is u1 or p. Qiskit has p.
+                
                 instrs.append(IrQGate(
-                    name=stmt.name,
+                    name=gate_name,
                     qubits=resolved_qubits,
                     params=resolved_params
                 ))

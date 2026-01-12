@@ -152,6 +152,99 @@ def qir_command(args: argparse.Namespace) -> None:
         print_error(f"Error: {str(e)}")
         sys.exit(1)
 
+def caretaker_command(args: argparse.Namespace) -> None:
+    """Handle the caretaker command."""
+    # Lazy import to avoid circular dependencies or slow startup
+    from hypercode.agents.diagnostic import BROskiCaretaker
+    
+    # We don't print a header here because the agent does its own printing
+    # but we can print a small intro if we want consistency
+    # print_header("🤖 BROski CARETAKER AGENT")
+    
+    agent = BROskiCaretaker(args.root)
+    
+    # Map args to agent methods
+    # The agent.diagnose() does everything based on internal logic, 
+    # but the CLI args might need to filter what diagnose does if we want to respect --mode
+    # However, the current BROskiCaretaker.diagnose() runs everything (OMNI).
+    # If we want to support modes properly, we might need to adjust the agent or just run diagnose()
+    # for now, as the original script's main() did.
+    
+    # In the original script:
+    # report = agent.diagnose()
+    # agent.print_report(report)
+    # ...
+    
+    # We will follow the original script's main() logic but adapted for this command function
+    
+    report = agent.diagnose()
+    agent.print_report(report)
+    
+    if args.json:
+        agent.export_json(report)
+        
+    if args.commit:
+        agent.auto_commit(report)
+        
+    if not report.ready_to_commit:
+        sys.exit(1)
+
+def agents_command(args: argparse.Namespace) -> None:
+    """Handle agents commands."""
+    from hypercode.agents import caretaker, initialize_agents
+    import json
+    
+    # Initialize agents
+    initialize_agents()
+    
+    subcmd = args.agents_command
+    
+    if subcmd == "status":
+        print(caretaker.report())
+        
+    elif subcmd == "dispatch":
+        task = args.task
+        agent_filter = args.agent
+        task_args = {}
+        if args.args:
+            try:
+                task_args = json.loads(args.args)
+            except json.JSONDecodeError:
+                print_error("Invalid JSON in --args")
+                sys.exit(1)
+        
+        if agent_filter:
+            result = caretaker.dispatch(task, agent_filter=agent_filter, **task_args)
+        else:
+            # If no specific agent requested, default to orchestrate for single task?
+            # Or dispatch to any available? Dispatch picks first available.
+            result = caretaker.dispatch(task, **task_args)
+            
+        print_success(f"{result.agent_name}: {task}")
+        print(f"   Success: {result.success} | Time: {result.duration_seconds:.2f}s")
+        if result.output:
+            print(f"   Output: {result.output}")
+            
+    elif subcmd == "orchestrate":
+        task = args.task
+        strategy = args.strategy
+        # For orchestrate, we might want args too? Blueprint didn't specify args for orchestrate command but implied it.
+        # Let's support args here too if needed, but for now blueprint says:
+        # orchestrate(task, strategy)
+        
+        results = caretaker.orchestrate(task) # Missing args support in blueprint CLI, but let's assume no args for now or add if needed
+        synthesized = caretaker.synthesize(results, strategy=strategy)
+        
+        print_header(f"Orchestration Results ({strategy})")
+        for agent_name, result in results.items():
+            status_icon = "✅" if result.success else "❌"
+            print(f"  {status_icon} {agent_name}: {result.duration_seconds:.2f}s")
+        
+        print("\nSynthesized Result:")
+        print(f"  Success: {synthesized.success}")
+        if synthesized.output:
+            print(f"  Output: {synthesized.output}")
+
 def version_command(args: argparse.Namespace) -> None:
     """Handle the version command."""
     print("HyperCode v0.1.0 (development)")
@@ -200,6 +293,51 @@ def main() -> None:
     q_run_parser.add_argument("--shots", type=int, default=1024, help="Number of shots (default: 1024)")
     q_run_parser.add_argument("--seed", type=int, default=None, help="Simulator seed")
     q_run_parser.set_defaults(func=run_command, backend="qiskit")
+
+    # caretaker command
+    caretaker_parser = subparsers.add_parser("caretaker", help="Run the BROski Caretaker Agent")
+    caretaker_parser.add_argument(
+        "--mode",
+        choices=["status", "fix", "upgrade", "watch", "ready", "omni"],
+        default="omni",
+        help="Diagnostic mode (default: omni)"
+    )
+    caretaker_parser.add_argument(
+        "--commit",
+        action="store_true",
+        help="Auto-commit if all checks pass"
+    )
+    caretaker_parser.add_argument(
+        "--json",
+        action="store_true",
+        help="Export report as JSON"
+    )
+    caretaker_parser.add_argument(
+        "--root",
+        default=".",
+        help="Project root directory"
+    )
+    caretaker_parser.set_defaults(func=caretaker_command)
+
+    # agents command
+    agents_parser = subparsers.add_parser("agents", help="Agent orchestration commands")
+    agents_subparsers = agents_parser.add_subparsers(dest="agents_command", help="Agent commands")
+    
+    # agents status
+    agents_subparsers.add_parser("status", help="Show agent status").set_defaults(func=agents_command)
+    
+    # agents dispatch
+    dispatch_parser = agents_subparsers.add_parser("dispatch", help="Dispatch a task to agents")
+    dispatch_parser.add_argument("task", help="Task to execute")
+    dispatch_parser.add_argument("--agent", default=None, help="Specific agent to use")
+    dispatch_parser.add_argument("--args", default="{}", help="Task arguments as JSON")
+    dispatch_parser.set_defaults(func=agents_command)
+    
+    # agents orchestrate
+    orchestrate_parser = agents_subparsers.add_parser("orchestrate", help="Orchestrate multiple agents")
+    orchestrate_parser.add_argument("task", help="Task to execute")
+    orchestrate_parser.add_argument("--strategy", default="consensus", help="Synthesis strategy")
+    orchestrate_parser.set_defaults(func=agents_command)
 
     # version command
     version_parser = subparsers.add_parser("version", help="Show version information")

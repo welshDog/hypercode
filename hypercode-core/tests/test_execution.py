@@ -17,10 +17,11 @@ def test_evaluator_quantum_execution_mock() -> None:
     We mock the backend to ensure logic is correct even without Qiskit.
     """
     code = """
-    @quantum Test qubits 1
-    H q0
-    MEASURE q0 -> c0
-    @end
+    @circuit: Test
+    @init: q = QReg(1)
+    @init: c = CReg(1)
+    @hadamard: q[0]
+    @measure: q[0] -> c[0]
     """
     program = parse(code)
     
@@ -48,12 +49,13 @@ def test_evaluator_quantum_execution_integration() -> None:
         pytest.skip("Qiskit not installed")
         
     code = """
-    @quantum Bell qubits 2
-    H q0
-    CX q0 q1
-    MEASURE q0 -> c0
-    MEASURE q1 -> c1
-    @end
+    @circuit: Bell
+    @init: q = QReg(2)
+    @init: c = CReg(2)
+    @hadamard: q[0]
+    @cnot: q[0], q[1]
+    @measure: q[0] -> c[0]
+    @measure: q[1] -> c[1]
     """
     program = parse(code)
     

@@ -10,11 +10,13 @@ from typing import Dict, Any, Optional, Union, List
 from hypercode.ast.nodes import (
     Program, Statement, DataDecl, SetStmt, PrintStmt, CheckStmt, Block,
     Expr, Literal, Variable, BinaryOp,
-    QuantumCircuitDecl, Directive
+    QuantumCircuitDecl, Directive, QRegDecl, QGate, QMeasure,
+    CrisprEdit, PcrReaction, QuantumCrispr
 )
 from hypercode.ir.lower_quantum import lower_circuit
 from hypercode.ir.qir_nodes import QModule, QIR
 from hypercode.backends import get_backend, Backend
+from hypercode.backends.molecular_backend import MolecularBackend
 
 
 def run_qiskit(module: Union[QModule, QIR], shots: int = 1024, seed: Optional[int] = None) -> Dict[str, int]:
@@ -72,6 +74,7 @@ class Evaluator:
         self.backend: Optional[Backend] = None
         self.shots = shots
         self.seed = seed
+        self.molecular_backend: Optional[MolecularBackend] = None # Lazy initialization
         
         # For backward compatibility with tests
         if not use_quantum_sim:
@@ -80,22 +83,47 @@ class Evaluator:
         # Instantiate the backend if not in classical mode
         if backend_name != "classical":
             try:
-                self.backend = get_backend(backend_name)
+                b = get_backend(backend_name)
+                if isinstance(b, Backend):
+                    self.backend = b
+                elif isinstance(b, MolecularBackend):
+                    self.molecular_backend = b
             except ValueError as e:
                 print(f"Warning: {e}")
 
-    def evaluate(self, node: Program) -> None:
+    def evaluate(self, node: Program) -> Dict[str, Any]:
         """Evaluate a complete program by executing each statement in sequence.
         
         Args:
             node: The root Program node containing statements to execute
             
+        Returns:
+            Dictionary of variables after execution
+            
         Raises:
             RuntimeError: If there's an error during evaluation
         """
         try:
+            # Pre-process: Group top-level quantum statements into an implicit circuit
+            statements = []
+            quantum_buffer = []
+            
             for stmt in node.statements:
+                if isinstance(stmt, (QRegDecl, QGate, QMeasure)):
+                    quantum_buffer.append(stmt)
+                else:
+                    if quantum_buffer:
+                        # Flush buffer
+                        statements.append(QuantumCircuitDecl(name="main", body=quantum_buffer))
+                        quantum_buffer = []
+                    statements.append(stmt)
+            
+            if quantum_buffer:
+                 statements.append(QuantumCircuitDecl(name="main", body=quantum_buffer))
+
+            for stmt in statements:
                 self.execute(stmt)
+            return self.variables
         except Exception as e:
             raise RuntimeError(f"Error during evaluation: {e}") from e
 
@@ -134,6 +162,85 @@ class Evaluator:
                     self.execute_block(stmt.true_block)
                 elif stmt.false_block:
                     self.execute_block(stmt.false_block)
+
+            elif isinstance(stmt, (CrisprEdit, PcrReaction)):
+                if self.molecular_backend is None:
+                    backend = get_backend("molecular")
+                    if isinstance(backend, MolecularBackend):
+                        self.molecular_backend = backend
+                    else:
+                        raise ValueError("Failed to initialize molecular backend")
+                
+                # Sync variables (DNA strings) to backend
+                # Only sync strings that look like DNA to avoid clutter? 
+                # Or just sync all strings.
+                for k, v in self.variables.items():
+                    if isinstance(v, str):
+                        self.molecular_backend.memory[k] = v
+                
+                self.molecular_backend.execute_statement(stmt)
+                
+                # Sync logs back to evaluator output
+                if hasattr(self.molecular_backend, 'logs'):
+                    self.output.extend(self.molecular_backend.logs)
+                    self.molecular_backend.logs = [] # Clear backend logs
+                
+                # Sync memory back (in case of PCR product creation)
+                for k, v in self.molecular_backend.memory.items():
+                    self.variables[k] = v
+
+            elif isinstance(stmt, QuantumCrispr):
+                from hypercode.hybrid.crispr_optimizer import optimize_guides
+                from hypercode.backends.crispr_engine import find_pam_sites, extract_grna
+                import os
+
+                # 1. Get Target Sequence
+                target_seq = stmt.target
+                if stmt.target in self.variables:
+                    target_seq = self.variables[stmt.target]
+                
+                # 2. Get Genome Sequence
+                genome_input = stmt.genome
+                genome_seq = genome_input
+                if genome_input in self.variables:
+                    genome_seq = self.variables[genome_input]
+                elif os.path.exists(genome_input):
+                    with open(genome_input, 'r') as f:
+                        raw = f.read()
+                        # Simple FASTA parsing
+                        if raw.startswith('>'):
+                            lines = raw.splitlines()
+                            genome_seq = "".join(line.strip() for line in lines if not line.startswith('>'))
+                        else:
+                            genome_seq = raw.strip()
+                
+                # 3. Extract Candidates from Target
+                pam_sites = find_pam_sites(target_seq)
+                candidates = []
+                for pam_start, pam_seq in pam_sites:
+                    grna = extract_grna(target_seq, pam_start)
+                    if len(grna) == 20:
+                        candidates.append(grna)
+                
+                if not candidates:
+                    msg = f"Warning: No valid gRNAs found in target '{stmt.target}'"
+                    print(msg)
+                    self.output.append(msg)
+                    self.variables[stmt.result_var] = []
+                else:
+                    # 4. Optimize
+                    msg = f"Optimizing {len(candidates)} candidates for {stmt.num_guides} guides..."
+                    print(msg)
+                    self.output.append(msg)
+                    
+                    selected_guides = optimize_guides(candidates, genome_seq, k=stmt.num_guides)
+                    
+                    # 5. Store Result
+                    self.variables[stmt.result_var] = selected_guides
+                    
+                    msg_res = f"Selected {len(selected_guides)} optimal guides."
+                    print(msg_res)
+                    self.output.append(msg_res)
                     
             elif isinstance(stmt, QuantumCircuitDecl):
                 self._execute_quantum_circuit(stmt)
@@ -278,3 +385,17 @@ class Evaluator:
                 
         else:
             raise ValueError(f"Unsupported expression type: {type(expr).__name__}")
+
+def evaluate(node: Program, shots: int = 1024) -> Dict[str, Any]:
+    """
+    Convenience function to evaluate a program using the default evaluator.
+    
+    Args:
+        node: The AST root node
+        shots: Number of shots for quantum execution
+        
+    Returns:
+        Dictionary of variables/results
+    """
+    evaluator = Evaluator(shots=shots)
+    return evaluator.evaluate(node)

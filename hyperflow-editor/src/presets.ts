@@ -86,41 +86,48 @@ export const QUANTUM_PRESET: Preset = {
   name: 'Quantum Circuit Demo',
   nodes: [
     {
+      id: 'init-q',
+      type: 'init',
+      position: { x: 50, y: 50 },
+      data: { label: 'q = QReg(2)' }
+    },
+    {
+      id: 'init-c',
+      type: 'init',
+      position: { x: 50, y: 150 },
+      data: { label: 'c = CReg(2)' }
+    },
+    {
       id: 'h-node',
-      type: 'hex',
-      position: { x: 100, y: 100 },
-      data: { label: 'H (Q0)', op: 'h', qubitIndex: 0 } as QiskitNodeData
+      type: 'gate',
+      position: { x: 300, y: 50 },
+      data: { label: 'H', gateType: 'H', target: 'q[0]' }
     },
     {
       id: 'cx-node',
-      type: 'hex',
-      position: { x: 300, y: 150 },
-      data: { label: 'CNOT', op: 'cx', controlIndex: 0, targetIndex: 1 } as QiskitNodeData
+      type: 'gate',
+      position: { x: 450, y: 100 },
+      data: { label: 'CX', gateType: 'CX', control: 'q[0]', target: 'q[1]' }
     },
     {
-      id: 'x-node',
-      type: 'hex',
-      position: { x: 500, y: 250 },
-      data: { label: 'X (Q1)', op: 'x', qubitIndex: 1 } as QiskitNodeData
+      id: 'measure-0',
+      type: 'measure',
+      position: { x: 600, y: 50 },
+      data: { label: 'Measure q[0]', qubit: 'q[0]', target: 'c[0]' }
     },
     {
-      id: 'rx-node',
-      type: 'hex',
-      position: { x: 500, y: 50 },
-      data: { label: 'RX(π/2)', op: 'rx', qubitIndex: 0, theta: 'np.pi/2' } as QiskitNodeData
-    },
-    {
-      id: 'measure-node',
-      type: 'hex',
-      position: { x: 700, y: 150 },
-      data: { label: 'Measure', op: 'measure', qubitIndex: 0 } as QiskitNodeData
+      id: 'measure-1',
+      type: 'measure',
+      position: { x: 600, y: 150 },
+      data: { label: 'Measure q[1]', qubit: 'q[1]', target: 'c[1]' }
     }
   ],
   edges: [
-    { id: 'e1', source: 'h-node', target: 'cx-node', type: 'quantum', animated: false },
-    { id: 'e2', source: 'cx-node', target: 'x-node', type: 'quantum', animated: false },
-    { id: 'e3', source: 'cx-node', target: 'rx-node', type: 'quantum', animated: false },
-    { id: 'e4', source: 'rx-node', target: 'measure-node', type: 'quantum', animated: false }
+    // Visual connections for flow (logic handled by compiler)
+    { id: 'e1', source: 'init-q', target: 'h-node', type: 'quantum' },
+    { id: 'e2', source: 'h-node', target: 'cx-node', type: 'quantum' },
+    { id: 'e3', source: 'cx-node', target: 'measure-0', type: 'quantum' },
+    { id: 'e4', source: 'cx-node', target: 'measure-1', type: 'quantum' }
   ]
 };
 

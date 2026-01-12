@@ -1,5 +1,5 @@
-import re
 
+import re
 from typing import List, Tuple, Dict, Any
 from hypercode.backends.bio_utils import calculate_tm
 
@@ -12,19 +12,38 @@ class CRISPRResult:
         self.tm = tm
         self.off_target_score = off_target_score
 
+class CRISPREngine:
+    """
+    Core engine for CRISPR/Cas9 simulation and analysis.
+    """
+    def scan_genome_for_off_targets(self, guide_seq: str, genome_seq: str, max_mismatches: int = 4) -> List[Tuple[int, int, str]]:
+        """
+        Scans a genome sequence for potential off-target binding sites.
+        Wrapper for the standalone function.
+        """
+        return scan_genome_for_off_targets(guide_seq, genome_seq, max_mismatches)
+
+    def score_off_target_risk(self, guide_seq: str, genome_seq: str) -> float:
+        """
+        Calculates a risk score based on off-target potentials.
+        Wrapper for the standalone function.
+        """
+        return score_off_target_risk(guide_seq, genome_seq)
+
+    def simulate_cut(self, dna_sequence: str, grna_sequence: str, pam_pattern: str = "NGG") -> CRISPRResult:
+        """
+        Simulates a CRISPR/Cas9 cut.
+        Wrapper for the standalone function.
+        """
+        return simulate_cut(dna_sequence, grna_sequence, pam_pattern)
+
 def find_pam_sites(sequence: str, pam_pattern: str = "NGG") -> List[Tuple[int, str]]:
     """
     Finds all PAM sites in a sequence matching the pattern.
     Returns a list of (start_index, pam_sequence) tuples.
     """
     sequence = sequence.upper()
-    # Convert IUPAC codes to Regex
-    # N -> [ATCG]
     regex_pattern = pam_pattern.replace("N", "[ATCG]")
-    
-    # Use lookahead? No, PAM is consumed in standard finding usually, 
-    # but strictly speaking, overlapping PAMs? usually not an issue for Cas9.
-    # finditer is fine.
     
     matches = []
     for m in re.finditer(regex_pattern, sequence):
@@ -40,21 +59,62 @@ def extract_grna(sequence: str, pam_start: int, length: int = 20) -> str:
         return "" # Not enough space upstream
     return sequence[pam_start - length : pam_start]
 
-def score_off_target(target_seq: str, genome_seq: str = "") -> float:
+def calculate_mismatch_score(guide_seq: str, target_seq: str) -> int:
     """
-    Placeholder for off-target scoring (CFD/MIT).
-    For MVP, returns a mock score based on GC content (higher GC -> usually more specific binding? actually complex).
-    Let's just return a placeholder or 1.0 (perfect specificity) if no genome provided.
+    Calculates the number of mismatches between two sequences of equal length.
     """
-    # TODO: Implement Phase 2 Off-Target Detection
-    return 1.0
+    if len(guide_seq) != len(target_seq):
+        return 999 # Invalid comparison
+    
+    mismatches = 0
+    for i in range(len(guide_seq)):
+        if guide_seq[i] != target_seq[i]:
+            mismatches += 1
+    return mismatches
+
+def scan_genome_for_off_targets(guide_seq: str, genome_seq: str, max_mismatches: int = 4) -> List[Tuple[int, int, str]]:
+    """
+    Scans a genome sequence for potential off-target binding sites.
+    Returns a list of (index, mismatches, sequence_found).
+    
+    Note: This is a simplified O(N*M) scanner for the MVP.
+    Real-world tools use efficient indexing (e.g., Bowtie, BWA).
+    """
+    guide_len = len(guide_seq)
+    genome_len = len(genome_seq)
+    off_targets = []
+    
+    # Brute force scan (okay for small viral genomes/plasmids in MVP)
+    # Step by 1bp
+    for i in range(genome_len - guide_len + 1):
+        subseq = genome_seq[i : i + guide_len]
+        mismatches = calculate_mismatch_score(guide_seq, subseq)
+        
+        if mismatches <= max_mismatches and mismatches > 0:
+             off_targets.append((i, mismatches, subseq))
+             
+    return off_targets
+
+def score_off_target_risk(guide_seq: str, genome_seq: str) -> float:
+    """
+    Calculates a risk score based on off-target potentials.
+    Higher score = Higher risk (Bad guide).
+    Lower score = Lower risk (Good guide).
+    
+    Formula: Sum(1 / (mismatches^2)) for all found off-targets.
+    """
+    off_targets = scan_genome_for_off_targets(guide_seq, genome_seq)
+    risk_score = 0.0
+    for _, mismatches, _ in off_targets:
+        if mismatches == 0:
+            continue # This is the on-target (or a perfect off-target duplicate)
+        risk_score += 1.0 / (mismatches ** 2)
+        
+    return risk_score
 
 def simulate_cut(dna_sequence: str, grna_sequence: str, pam_pattern: str = "NGG") -> CRISPRResult:
     """
     Simulates a CRISPR/Cas9 cut.
-    1. Finds the gRNA match in the DNA.
-    2. Verifies the PAM exists immediately downstream.
-    3. Simulates a DSB (Double Stranded Break) and NHEJ repair (indel).
     """
     dna = dna_sequence.upper()
     grna = grna_sequence.upper()
@@ -64,7 +124,6 @@ def simulate_cut(dna_sequence: str, grna_sequence: str, pam_pattern: str = "NGG"
     
     # 1. Find ALL gRNA matches
     start_search = 0
-    candidates = []
     
     while True:
         match_index = dna.find(grna, start_search)
@@ -99,21 +158,9 @@ def simulate_cut(dna_sequence: str, grna_sequence: str, pam_pattern: str = "NGG"
                     log=log,
                     edited_sequence=edited_seq,
                     cut_site=cut_site,
-                    tm=tm,
-                    off_target_score=score_off_target(grna)
+                    tm=tm
                 )
-            else:
-                candidates.append(f"Match at {match_index} failed PAM check (found '{actual_pam}').")
-        else:
-             candidates.append(f"Match at {match_index} ignored (PAM out of bounds).")
-             
+        
         start_search = match_index + 1
-        
-    # If we reach here, no valid cut was found
-    if not candidates:
-        log.append(f"Target sequence '{grna}' not found in DNA.")
-    else:
-        log.extend(candidates)
-        log.append("No valid target+PAM sites found.")
-        
-    return CRISPRResult(False, log, dna)
+
+    return CRISPRResult(success=False, log=["CRISPR failed: No matching target/PAM found."])

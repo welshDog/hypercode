@@ -1,6 +1,8 @@
 from typing import Dict, Any
 from hypercode.backends.crispr_engine import simulate_cut
 from hypercode.backends.bio_utils import calculate_tm, ENZYME_DB
+from hypercode.compiler import compile_flow
+from hypercode.api import execute
 
 def simulate_flow(flow_data: Dict[str, Any]) -> Dict[str, Any]:
     """
@@ -8,6 +10,30 @@ def simulate_flow(flow_data: Dict[str, Any]) -> Dict[str, Any]:
     Returns a dictionary mapping node IDs to their simulation results.
     """
     nodes = flow_data.get("nodes", [])
+    
+    # Check for quantum
+    has_quantum = any(n["type"] in ["h", "x", "z", "cx", "measure", "rx", "init", "gate"] for n in nodes)
+    
+    if has_quantum:
+        # Compile to HyperCode
+        source = compile_flow(flow_data)
+        
+        # Execute
+        # Note: execute() parses and runs the code.
+        # We assume the circuit is named 'main' by the compiler.
+        exec_result = execute(source, backend_name="qiskit")
+        
+        if exec_result.error:
+            return {"error": exec_result.error}
+            
+        # Extract counts from variables
+        variables = exec_result.result
+        counts = variables.get("main_results", {})
+        
+        # Format for frontend
+        return {"counts": counts}
+
+    # --- BIO SIMULATION (Existing Logic) ---
     edges = flow_data.get("edges", [])
     
     # Store results: node_id -> result_dict

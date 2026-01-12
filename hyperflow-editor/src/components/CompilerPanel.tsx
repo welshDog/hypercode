@@ -64,6 +64,33 @@ const CompilerPanel: React.FC<CompilerPanelProps> = ({ code, simulation, onClose
     );
   };
 
+  const renderQuantumResults = (result: any) => {
+    // Basic quantum result rendering (histogram later)
+    return (
+      <div style={{ padding: '10px' }}>
+        <h3 style={{ fontSize: '14px', marginBottom: '10px' }}>Quantum Measurement Results</h3>
+        {result.counts ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+            {Object.entries(result.counts).map(([state, count]: [string, any]) => (
+              <div key={state} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span style={{ fontFamily: 'monospace', width: '30px' }}>|{state}⟩</span>
+                <div style={{
+                  height: '20px',
+                  width: `${(count as number) * 5}px`, // Scale for visual
+                  background: '#6c5ce7',
+                  borderRadius: '4px'
+                }} />
+                <span style={{ fontSize: '12px' }}>{count as number}</span>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div>No measurement data available.</div>
+        )}
+      </div>
+    );
+  };
+
   const renderLinearMap = (result: any) => {
     if (!result.parts || result.parts.length === 0) return null;
 
@@ -386,113 +413,92 @@ const CompilerPanel: React.FC<CompilerPanelProps> = ({ code, simulation, onClose
         flexDirection: 'column'
       }}>
         {activeTab === 'code' ? (
-          // Code View
-          <>
-            <div style={{
-              flex: 1,
-              padding: '15px',
-              overflow: 'auto',
-              background: '#f5f6fa',
-              fontFamily: 'monospace',
-              fontSize: '14px',
-              lineHeight: '1.5',
-              color: '#2d3436'
-            }}>
-              <pre>{code}</pre>
-            </div>
-            <div style={{
-              padding: '10px',
-              borderTop: '1px solid #e0e0e0',
-              display: 'flex',
-              justifyContent: 'flex-end',
-              background: 'white'
-            }}>
-              <button
-                onClick={() => navigator.clipboard.writeText(code)}
-                style={{
-                  padding: '8px 16px',
-                  background: '#0984e3',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  fontWeight: 'bold'
-                }}
-              >
-                Copy Code
-              </button>
-            </div>
-          </>
-        ) : (
-          // Simulation View
-          <div style={{
-            flex: 1,
+          <pre style={{
+            margin: 0,
             padding: '20px',
+            color: '#2d3436',
+            fontFamily: 'Fira Code, monospace',
+            fontSize: '14px',
             overflow: 'auto',
-            background: '#f1f2f6',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '15px'
+            height: '100%'
           }}>
+            {code}
+          </pre>
+        ) : (
+          <div style={{ padding: '20px', overflow: 'auto', height: '100%' }}>
             {!simulation ? (
-              <div style={{ color: '#636e72', textAlign: 'center', marginTop: '40px' }}>
-                No simulation data available.
+              <div style={{
+                color: '#b2bec3',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                height: '100%',
+                flexDirection: 'column',
+                gap: '10px'
+              }}>
+                <div style={{ fontSize: '24px' }}>⚛️ / 🧬</div>
+                <div>Run a simulation to see results</div>
               </div>
             ) : (
-              Object.entries(simulation).map(([nodeId, result]) => (
-                <div key={nodeId} style={{
-                  background: 'white',
-                  padding: '15px',
-                  borderRadius: '8px',
-                  boxShadow: '0 2px 5px rgba(0,0,0,0.05)',
-                  borderLeft: `4px solid ${result.type === 'edited_dna' ? '#e17055' : result.type === 'amplicon' ? '#fdcb6e' : '#74b9ff'}`
-                }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
-                    <span style={{ fontWeight: 'bold', color: '#2d3436', textTransform: 'uppercase', fontSize: '12px' }}>
-                      {result.type}
-                    </span>
-                    {result.efficiency && (
-                      <span style={{ background: '#55efc4', padding: '2px 8px', borderRadius: '10px', fontSize: '12px', fontWeight: 'bold' }}>
-                        Yield: {result.efficiency}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                {/* Quantum Results */}
+                {simulation.counts && renderQuantumResults(simulation)}
+
+                {/* Biological Results */}
+                {Object.entries(simulation).map(([nodeId, result]) => (
+                  <div key={nodeId} style={{
+                    background: 'white',
+                    padding: '15px',
+                    borderRadius: '8px',
+                    boxShadow: '0 2px 5px rgba(0,0,0,0.05)',
+                    borderLeft: `4px solid ${result.type === 'edited_dna' ? '#e17055' : result.type === 'amplicon' ? '#fdcb6e' : '#74b9ff'}`
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
+                      <span style={{ fontWeight: 'bold', color: '#2d3436', textTransform: 'uppercase', fontSize: '12px' }}>
+                        {result.type}
                       </span>
+                      {result.efficiency && (
+                        <span style={{ background: '#55efc4', padding: '2px 8px', borderRadius: '10px', fontSize: '12px', fontWeight: 'bold' }}>
+                          Yield: {result.efficiency}
+                        </span>
+                      )}
+                      {result.off_target_score && (
+                        <span style={{ background: '#ffeaa7', padding: '2px 8px', borderRadius: '10px', fontSize: '12px', fontWeight: 'bold' }}>
+                          Off-Target: {result.off_target_score}
+                        </span>
+                      )}
+                    </div>
+
+                    {result.type === 'plasmid' && renderPlasmidMap(result)}
+
+                    {result.sequence && (
+                      <div style={{
+                        fontFamily: 'monospace',
+                        wordBreak: 'break-all',
+                        background: '#dfe6e9',
+                        padding: '8px',
+                        borderRadius: '4px',
+                        fontSize: '12px',
+                        color: '#2d3436',
+                        marginBottom: '10px'
+                      }}>
+                        {result.sequence}
+                      </div>
                     )}
-                    {result.off_target_score && (
-                      <span style={{ background: '#ffeaa7', padding: '2px 8px', borderRadius: '10px', fontSize: '12px', fontWeight: 'bold' }}>
-                        Off-Target: {result.off_target_score}
-                      </span>
+
+                    {result.log && result.log.length > 0 && (
+                      <div style={{ fontSize: '12px', color: '#636e72' }}>
+                        {result.log.map((entry: string, i: number) => (
+                          <div key={i}>• {entry}</div>
+                        ))}
+                      </div>
                     )}
                   </div>
-
-                  {result.type === 'plasmid' && renderPlasmidMap(result)}
-
-                  {result.sequence && (
-                    <div style={{
-                      fontFamily: 'monospace',
-                      wordBreak: 'break-all',
-                      background: '#dfe6e9',
-                      padding: '8px',
-                      borderRadius: '4px',
-                      fontSize: '12px',
-                      color: '#2d3436',
-                      marginBottom: '10px'
-                    }}>
-                      {result.sequence}
-                    </div>
-                  )}
-
-                  {result.log && result.log.length > 0 && (
-                    <div style={{ fontSize: '12px', color: '#636e72' }}>
-                      {result.log.map((entry: string, i: number) => (
-                        <div key={i}>• {entry}</div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              ))
+                ))
+                }
+              </div>
             )}
           </div>
-        )}
-      </div>
       {renderTooltip()}
     </Panel>
   );

@@ -87,6 +87,41 @@ class QuantumCircuitDecl(Statement):
     name: str
     body: List[Statement]  # Can contain QRegDecl, QGate, QMeasure
 
+# --- Bio Ops ---
+
+@dataclass
+class BioSequence(Expr):
+    sequence: str
+    type: str = "DNA"  # DNA, RNA, PROTEIN
+
+@dataclass
+class CrisprEdit(Statement):
+    target: str      # Variable name of target sequence
+    guide: str       # Guide RNA sequence
+    pam: str = "NGG" # PAM motif
+
+@dataclass
+class PcrReaction(Statement):
+    template: str    # Variable name of template
+    fwd_primer: str
+    rev_primer: str
+    cycles: int = 30
+
+@dataclass
+class QuantumCrispr(Statement):
+    """
+    Hybrid Quantum-Bio directive to optimize guide selection.
+    @quantum_crispr
+        target="X"
+        genome="Y"
+        num_guides=K
+        result -> var
+    """
+    target: str
+    genome: str
+    num_guides: int
+    result_var: str
+
 @dataclass
 class Program(Node):
     statements: List[Statement]

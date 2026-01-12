@@ -30,6 +30,9 @@ import { supabase } from './lib/supabase';
 import { SupabaseStorageProvider } from './storage/SupabaseStorageProvider';
 import PCRNode from './nodes/PCRNode';
 import GoldenGateNode from './nodes/GoldenGateNode';
+import InitNode from './nodes/InitNode';
+import GateNode from './nodes/GateNode';
+import MeasureNode from './nodes/MeasureNode';
 import CompilerPanel from './components/CompilerPanel';
 
 // --- React Flow Types ---
@@ -43,6 +46,10 @@ const nodeTypes: NodeTypes = {
   crispr: CRISPRNode,
   pcr: PCRNode,
   goldengate: GoldenGateNode,
+  // V3 Nodes
+  init: InitNode,
+  gate: GateNode,
+  measure: MeasureNode,
 };
 
 const edgeTypes: EdgeTypes = {
@@ -369,7 +376,7 @@ function App() {
       setSimulationResults(null);
       setIsCompilerOpen(true);
 
-      const response = await fetch('http://localhost:8000/compile', {
+      const response = await fetch('http://127.0.0.1:8000/compile', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

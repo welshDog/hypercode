@@ -1,14 +1,12 @@
 #!/usr/bin/env python3
 """
-🤖 BROski Caretaker Agent for HyperCode
+🤖 Hyper Caretaker Agent for HyperCode
 Autonomous diagnostic, repair, and maintenance agent.
-Single-file, zero dependencies (except subprocess).
+Integrated as a core Hyper Agent.
 
 Usage:
-  python broski_caretaker.py              # Full OMNI scan
-  python broski_caretaker.py --mode fix   # FIX mode only
-  python broski_caretaker.py --mode watch # WATCH mode only
-  python broski_caretaker.py --commit     # Auto-commit if safe
+  hypercode caretaker              # Full OMNI scan
+  hypercode caretaker --mode fix   # FIX mode only
 """
 
 import subprocess
@@ -19,7 +17,7 @@ from dataclasses import dataclass, asdict
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, Any
 
 
 class ScanMode(Enum):
@@ -42,7 +40,7 @@ class Finding:
     action: Optional[str] = None  # suggested fix
     verified: bool = False
 
-    def to_dict(self):
+    def to_dict(self) -> Dict[str, Any]:
         return asdict(self)
 
 
@@ -50,9 +48,9 @@ class Finding:
 class DiagnosticReport:
     """Full OMNI scan results."""
     timestamp: str
-    db_status: Dict
-    import_status: Dict
-    async_status: Dict
+    db_status: Dict[str, Any]
+    import_status: Dict[str, Any]
+    async_status: Dict[str, Any]
     findings: List[Finding]
     summary: str
     ready_to_commit: bool
@@ -95,10 +93,10 @@ class BROskiCaretaker:
         except Exception as e:
             return "", str(e), 1
 
-    def check_db_status(self) -> Dict:
+    def check_db_status(self) -> Dict[str, Any]:
         """✅ STATUS: Scan database & migration state."""
         print("🔍 [STATUS] Scanning database layer...")
-        status = {
+        status: Dict[str, Any] = {
             "alembic_version": None,
             "db_file_exists": False,
             "database_utils_exists": False,
@@ -121,11 +119,13 @@ class BROskiCaretaker:
             )
 
         # Check canonical DB module
-        db_utils_path = self.root / "src" / "hypercode" / "database_utils.py"
+        # Fixed path: remove src/
+        db_utils_path = self.root / "hypercode" / "database_utils.py"
         status["database_utils_exists"] = db_utils_path.exists()
 
         # Check async DB module
-        async_db_path = self.root / "src" / "hypercode" / "data" / "database.py"
+        # Fixed path: remove src/
+        async_db_path = self.root / "hypercode" / "data" / "database.py"
         status["async_db_exists"] = async_db_path.exists()
 
         # Check SQLite file
@@ -134,10 +134,10 @@ class BROskiCaretaker:
 
         return status
 
-    def check_import_hygiene(self) -> Dict:
+    def check_import_hygiene(self) -> Dict[str, Any]:
         """✅ STATUS: Scan for import consistency."""
         print("🔍 [STATUS] Scanning import hygiene...")
-        status = {
+        status: Dict[str, Any] = {
             "bad_imports_found": [],
             "canonical_imports": 0,
             "shim_files": [],
@@ -148,12 +148,13 @@ class BROskiCaretaker:
 
         for py_file in py_files:
             try:
-                content = py_file.read_text()
+                content = py_file.read_text(encoding="utf-8")
 
                 # Check for non-canonical imports
-                if "from hypercode.data.database" in content:
+                # Split strings to avoid self-detection
+                if "from " + "hypercode.data.database" in content:
                     status["bad_imports_found"].append(str(py_file))
-                if "from data.database" in content:
+                if "from " + "data.database" in content:
                     status["bad_imports_found"].append(str(py_file))
 
                 # Count canonical imports
@@ -164,7 +165,8 @@ class BROskiCaretaker:
                 pass  # Skip unreadable files
 
         # Find shim files
-        shim_dir = self.root / "src" / "hypercode" / "data"
+        # Fixed path: remove src/
+        shim_dir = self.root / "hypercode" / "data"
         if shim_dir.exists():
             shim_files = list(shim_dir.glob("*.py"))
             status["shim_files"] = [str(f) for f in shim_files]
@@ -176,22 +178,23 @@ class BROskiCaretaker:
                     mode="fix",
                     title="Non-canonical imports detected",
                     description=f"Found {len(status['bad_imports_found'])} files with bad imports",
-                    action="Run: grep -r 'from data.database' src/ && sed -i 's|from data.database|from hypercode.database_utils|g' src/**/*.py",
+                    action="Run: grep -r 'from data.database' hypercode/ && sed -i 's|from data.database|from hypercode.database_utils|g' hypercode/**/*.py",
                 )
             )
 
         return status
 
-    def check_async_status(self) -> Dict:
+    def check_async_status(self) -> Dict[str, Any]:
         """✅ STATUS: Understand async DB path."""
         print("🔍 [STATUS] Scanning async DB configuration...")
-        status = {
+        status: Dict[str, Any] = {
             "database_py_active": False,
             "modules_depending_on_async": [],
             "decision_needed": False,
         }
 
-        db_file = self.root / "src" / "hypercode" / "data" / "database.py"
+        # Fixed path: remove src/
+        db_file = self.root / "hypercode" / "data" / "database.py"
         if not db_file.exists():
             return status
 
@@ -201,7 +204,7 @@ class BROskiCaretaker:
         py_files = list(self.root.glob("**/*.py"))
         for py_file in py_files:
             try:
-                content = py_file.read_text()
+                content = py_file.read_text(encoding="utf-8")
                 if "from hypercode.data.database" in content or (
                     "database.py" in str(py_file) and "import" in content
                 ):
@@ -262,7 +265,7 @@ class BROskiCaretaker:
 
         return report
 
-    def _generate_summary(self, db: Dict, imports: Dict, async_cfg: Dict) -> str:
+    def _generate_summary(self, db: Dict[str, Any], imports: Dict[str, Any], async_cfg: Dict[str, Any]) -> str:
         """Create human-readable summary."""
         lines = []
 
@@ -332,7 +335,7 @@ class BROskiCaretaker:
     def export_json(self, report: DiagnosticReport, filename: str = "broski_report.json"):
         """Export report as JSON."""
         path = self.root / filename
-        with open(path, "w") as f:
+        with open(path, "w", encoding="utf-8") as f:
             json.dump(report.to_dict(), f, indent=2)
         print(f"📄 Report exported: {path}")
 
@@ -402,6 +405,39 @@ def main():
 
     # Exit with status
     sys.exit(0 if report.ready_to_commit else 1)
+
+
+# Integration with Agent Orchestration
+try:
+    from .base_agent import BaseAgent
+    class DiagnosticAgent(BaseAgent):
+        """
+        🚑 CARETAKER - Diagnostic & Repair
+        Wraps BROskiCaretaker for the agent orchestration system.
+        """
+        def __init__(self):
+            super().__init__('caretaker_agent')
+            self.impl = BROskiCaretaker()
+        
+        def _register_capabilities(self):
+            self.capabilities['diagnose'] = self._diagnose
+            self.capabilities['fix_imports'] = self._fix_imports
+            self.capabilities['verify_db'] = self._verify_db
+            
+        def _diagnose(self, mode: str = 'omni') -> Dict:
+            """Run diagnostic scan."""
+            report = self.impl.diagnose()
+            return report.to_dict()
+            
+        def _fix_imports(self) -> Dict:
+            """Run import hygiene check."""
+            return self.impl.check_import_hygiene()
+            
+        def _verify_db(self) -> Dict:
+            """Verify database status."""
+            return self.impl.check_db_status()
+except ImportError:
+    pass  # Allow running as standalone script
 
 
 if __name__ == "__main__":

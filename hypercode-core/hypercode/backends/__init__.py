@@ -1,23 +1,25 @@
 """
 Backend registration and loading module.
 """
-from typing import Dict, Type
+from typing import Dict, Type, Any
 
 from .base import BaseBackend
 # Alias BaseBackend as Backend for convenience
 Backend = BaseBackend
 
 from .qiskit_backend import QiskitBackend
+from .molecular_backend import MolecularBackend
 # Import other backends here as they are created
 # from .classical_backend import ClassicalBackend
 
 # A registry of available backend classes
-BACKEND_REGISTRY: Dict[str, Type[BaseBackend]] = {
+BACKEND_REGISTRY: Dict[str, Any] = {
     "qiskit": QiskitBackend,
+    "molecular": MolecularBackend,
     # "classical": ClassicalBackend,
 }
 
-def get_backend(name: str) -> BaseBackend:
+def get_backend(name: str) -> Any:
     """
     Factory function to get an instance of a backend by its name.
 

@@ -40,7 +40,7 @@ pip install hypercode
 
 # Install optional dependencies
 pip install "hypercode[quantum]"  # For quantum computing support
-# pip install "hypercode[molecular]"  # For molecular computing (coming soon)
+# pip install "hypercode[molecular]"  # Now included in core for MVP!
 ```
 
 ### Development Installation
@@ -66,7 +66,8 @@ pytest
 ### Multi-Paradigm
 - **Classical Computing** → Traditional imperative code (compiles to LLVM → CPU)
 - **Quantum Computing** → Circuit-based operations (compiles to Qiskit, Cirq, etc.)
-- **Molecular Computing** → DNA strand displacement (compiles to DSD simulator)
+- **Molecular Computing** → DNA simulation (CRISPR, PCR, Golden Gate)
+- **Hybrid Quantum-Bio** → Combinatorial optimization for biology (CRISPR guide selection via QUBO) - **NEW!**
 
 ### Dual Syntax
 - **Textual:** `@`-prefixed keywords, consistent structure, LLM-friendly
@@ -284,6 +285,20 @@ See the `examples/` directory for more.
 @check (x > 5) -> {
     @print(x)
 }
+```
+
+### Quantum-Bio Hybrid (CRISPR Optimization)
+```hypercode
+@quantum_crispr
+    target = "ATGC...NGG..."
+    genome = "genome.fa"
+    num_guides = 3
+    result -> best_guides
+```
+
+Run the benchmark to compare Quantum vs Classical performance:
+```bash
+python -m examples.hybrid.benchmark_vs_classical
 ```
 
 ---

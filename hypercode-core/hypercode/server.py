@@ -11,7 +11,7 @@ app = FastAPI(title="HyperCode Backend API")
 # Enable CORS for frontend development
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],  # Vite default port
+    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],  # Vite default port
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -25,6 +25,10 @@ class FlowRequest(BaseModel):
 @app.get("/")
 async def root():
     return {"message": "HyperCode Backend Online", "status": "ready"}
+
+@app.get("/health")
+async def health_check():
+    return {"status": "ok"}
 
 @app.post("/compile")
 async def compile_endpoint(flow: FlowRequest):

@@ -1,13 +1,12 @@
-# No Python code changes required for this pylint_django plugin warning.
-# The warning is about a missing pylint plugin, not the actual source code.
-# To resolve: install the plugin via pip install pylint-django or remove it from your pylint config.
+"""
+Bioinformatics Utility Module for HyperCode.
+Provides DNA manipulation functions, enzyme databases, and validation logic.
+"""
 
-from typing import Dict, Tuple, Any
+from typing import Dict, Any
 
 # Type IIS Restriction Enzymes
 # Format: Name -> (Recognition Site, Cut Offset Top, Cut Offset Bottom, Overhang Length)
-# BsaI: GGTCTC (1/5) -> Cut at 1bp after site on top, 5bp on bottom (leaving 4bp 5' overhang)
-# For extraction logic: Site + 1bp spacer + 4bp overhang
 ENZYME_DB: Dict[str, Dict[str, Any]] = {
     "BsaI": {
         "site": "GGTCTC",
@@ -28,6 +27,14 @@ ENZYME_DB: Dict[str, Dict[str, Any]] = {
         "overhang_len": 3
     }
 }
+
+def validate_dna(sequence: str) -> bool:
+    """
+    Validates that a sequence contains only valid DNA characters (A, T, C, G, N).
+    Case-insensitive.
+    """
+    valid_chars = set('ATCGN')
+    return all(base.upper() in valid_chars for base in sequence)
 
 def calculate_tm(sequence: str) -> float:
     """
